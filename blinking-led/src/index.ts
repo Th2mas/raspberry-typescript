@@ -1,14 +1,14 @@
 import { Gpio } from 'onoff';
 
 /**
- * Defines the pin we want to use
+ * Defines GPIO pin we want to use
  */
-const pinNumber = 24;   // We want to use GPIO pin 24
+const gpioNumber = 24;   // We want to use GPIO 24
 
 /**
  * Defines the pin as an output
  */
-const LED = new Gpio(pinNumber, 'out');
+const LED = new Gpio(gpioNumber, 'out');
 
 /**
  * Defines how often the LED should blink (in ms)
@@ -29,12 +29,7 @@ const endTime = 10000; // after 10 seconds
  */
 function toggleState(pin: Gpio): void {
     const pinState = pin.readSync();
-    let outputState;
-    if (pinState === Gpio.HIGH) {
-        outputState = Gpio.LOW;
-    } else {
-        outputState = Gpio.HIGH;
-    }
+    const outputState = pinState === Gpio.HIGH ? Gpio.LOW : Gpio.HIGH;
     pin.writeSync(outputState);
 }
 

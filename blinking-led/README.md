@@ -1,5 +1,5 @@
 # blinking-led
-This small project makes an LED blink by using nothing but a Raspberry Pi, some electrical components and 
+This small project makes a LED blink by using nothing but a Raspberry Pi, some electrical components and 
 TypeScript.
 The original JavaScript code was taken from [w3schools](https://www.w3schools.com/nodejs/nodejs_raspberrypi_blinking_led.asp).
 After finishing this project, you should be able to see the LED blinking.
