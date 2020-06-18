@@ -4,8 +4,8 @@ TypeScript.
 The original JavaScript code was taken from [w3schools](https://www.w3schools.com/nodejs/nodejs_raspberrypi_blinking_led.asp).
 After finishing this project, you should be able to see the LED blinking.
 
-We assume, that you are already familiar with TypeScript, know how to create a package.json file and understand
-the basics of Raspberry Pi I/O. 
+We assume, that you are already familiar with TypeScript, know how to create a package.json file, understand
+the basics of Raspberry Pi I/O and know how to connect to the Raspberry Pi. 
 
 ## Components
 - 1x Raspberry Pi 3
@@ -79,7 +79,8 @@ With this we have completed this quick tutorial.
 As a reference, the full code can be found in the [index.ts](./src/index.ts) file.
 
 ## Run application
-Open the console in the directory in which you stored the package.json file.
+Open the console in the directory in which you stored the package.json file on your Raspberry Pi.
+
 To run the application, type
 ```
 npm run start
