@@ -133,5 +133,5 @@ In the example we use five parallel green LEDs.
 ## Further reading
 The next two projects we will look at, are similar to this one.
 They involve using multiple GPIO pins to make the LEDs blink at different times.
-1. [Traffic Light](./traffic-light)
-2. [Binary Counter](./binary-counter)
+1. [Traffic Light](../traffic-light)
+2. [Binary Counter](../binary-counter)
