@@ -1,4 +1,10 @@
 # traffic-light
+This small project makes three LEDs, arranged in a traffic light pattern, turn on at different times, just like a traffic light.
+This is done by using nothing but a Raspberry Pi, some electrical components and TypeScript.
+After finishing this project, you should be able to see each of the three different lights light up after a certain time 
+passes.
+
+We assume, that you are already familiar with TypeScript, know how to create a package.json file, understand the basics of Raspberry Pi I/O and know how to connect to the Raspberry Pi. 
 
 ## Table of contents
 1. [Components](#components)
@@ -8,17 +14,18 @@
 5. [Code](#code)
 6. [Run application](#run-application)
 7. [Notes](#notes)
+    1. [Progress bar](#progress-bar)
+    2. [User input](#user-input)
 8. [Further reading](#further-reading)
 
 ## Components
 - 1x Raspberry Pi 3
 - 1x Breadboard
-- 3x 100&Omega; resistor
+- 3x 100&Omega; resistors
 - 1x Red LED
 - 1x Yellow LED
 - 1x Green LED
-- 3x Female-to-male jumper wire
-- 1x Male-to-male jumper wire
+- 4x Female-to-male jumper wires
 
 ## Design
 ![Fritzing diagram of the traffic light example](./images/traffic-light.design.svg)
@@ -84,14 +91,47 @@ const GREEN = new Gpio(21, 'out');
 const LEDs = [RED, YELLOW, GREEN];
 ```
 Before the program starts, all three LEDs are off.
-By using timeouts, we can turn each of the LEDs on or off.
+By using timeouts, we can define when each of the LEDs will be turned on.
 
-First, the red LED must be turned on while the others stay off.
-Next, the yellow LED must be turned on, and the red LED must be turned off.
-Finally, the green LED must be turned on, and the yellow LED must be turned off.
+First we want the red LED to be turned on, followed by the yellow and the green LED. 
+Each LED should be turned on in a sequence of about 2 seconds.
+The code will then look like this
+```typescript
+setTimeout(() => RED.writeSync(Gpio.HIGH), 0);
+setTimeout(() => YELLOW.writeSync(Gpio.HIGH), 2000);
+setTimeout(() => GREEN.writeSync(Gpio.HIGH), 4000);
+```
 
-We want to be able to turn on one LED at a time. 
-Therefore, we create a function, which turns on the given pin and turns off the remaining ones.
+The last part we have to do is freeing all resources.
+```typescript
+function freePin(pin: Gpio): void {
+    // Turn the pin off
+    pin.writeSync(Gpio.LOW);
+    // Free resources
+    pin.unexport();
+}
+```
+This can be done with an iteration over the LED array.
+The cleanup code must run after we have completed all steps and just need to clean up before the program finishes.
+For this we can use another timeout.
+
+As a reference, the full code can be found in the [index.ts](./src/index.ts) file.
+
+## Run application
+Open the console in the directory in which you stored the package.json file on your Raspberry Pi.
+
+To run the application, type
+```
+npm run start
+```
+in the console.
+After a short time, you should see how the traffic light is first red, then only yellow and then finally only green.  
+
+## Notes
+### Single shining LED
+Instead of turning each LED only on, we can also make each LED to be the only one to be turned on.
+For this, we need to create a separate method, where we set the currently inactive LEDs states to `Gpio.LOW`.
+We call this method `switchTo` with the pin to be turned on as the parameter
 ```typescript
 function switchTo(pin: Gpio): void {
     switch (pin) {
@@ -115,40 +155,9 @@ function switchTo(pin: Gpio): void {
     }
 }
 ```
-We give each LED a time of about 2 seconds.
-The code will then look like this
-```typescript
-setTimeout(() => switchTo(RED), 0);
-setTimeout(() => switchTo(YELLOW), 2000);
-setTimeout(() => switchTo(GREEN), 4000);
-```
 
-The last part we have to do is freeing all resources.
-```typescript
-function freePin(pin: Gpio): void {
-    // Turn the pin off
-    pin.writeSync(Gpio.LOW);
-    // Free resources
-    pin.unexport();
-}
-```
-This can be done over an iteration over the LED array.
-This code must run after we have completed all steps and just need to clean up before the program finishes.
-For this we can use another timeout.
+As a reference, the full code can be found in the [index-individual.ts](src/index-individual.ts) file.
 
-As a reference, the full code can be found in the [index.ts](./src/index.ts) file.
-
-## Run application
-Open the console in the directory in which you stored the package.json file on your Raspberry Pi.
-
-To run the application, type
-```
-npm run start
-```
-in the console.
-After a short time, you should see how the traffic light is first red, then only yellow and then finally only green.  
-
-## Notes
 ### User input
 
 ## Further reading
