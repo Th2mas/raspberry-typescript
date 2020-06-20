@@ -8,16 +8,16 @@ We assume, that you are already familiar with TypeScript, know how to create a p
 the basics of Raspberry Pi I/O and know how to connect to the Raspberry Pi. 
 
 ## Table of contents
-1. [Components](#Components)
-2. [Design](#Design)
-3. [Circuit Diagram](#Circuit Diagram)
-4. [Dependencies](#Dependencies)
-5. [Code](#Code)
-6. [Run application](#Run application)
-7. [Notes](#Notes)
-    1. [Parallel LED Design](#Parallel LED Design)
-    2. [Parallel LED Circuit Diagram](#Parallel LED Circuit Diagram)
-8. [Further reading](#Further reading)
+1. [Components](#components)
+2. [Design](#design)
+3. [Circuit Diagram](#circuit-diagram)
+4. [Dependencies](#dependencies)
+5. [Code](#code)
+6. [Run application](#run-application)
+7. [Notes](#notes)
+    1. [Parallel LED Design](#parallel-LED-design)
+    2. [Parallel LED Circuit Diagram](#parallel-LED-circuit-diagram)
+8. [Further reading](#further-reading)
 
 ## Components
 - 1x Raspberry Pi 3
