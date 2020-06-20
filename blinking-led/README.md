@@ -7,17 +7,41 @@ After finishing this project, you should be able to see the LED blinking.
 We assume, that you are already familiar with TypeScript, know how to create a package.json file, understand
 the basics of Raspberry Pi I/O and know how to connect to the Raspberry Pi. 
 
+## Table of contents
+1. [Components](#Components)
+2. [Design](#Design)
+3. [Circuit Diagram](#Circuit Diagram)
+4. [Dependencies](#Dependencies)
+5. [Code](#Code)
+6. [Run application](#Run application)
+7. [Notes](#Notes)
+    1. [Parallel LED Design](#Parallel LED Design)
+    2. [Parallel LED Circuit Diagram](#Parallel LED Circuit Diagram)
+8. [Further reading](#Further reading)
+
 ## Components
 - 1x Raspberry Pi 3
 - 1x Breadboard
 - 1x 100&Omega; resistor
-- 1x LED (color does not really matter)
+- 1x LED (color does not really matter, we used a green one)
 - 2x Female-to-male jumper wires
 
 ## Design
 ![Fritzing diagram of the blinking LED example](./images/raspberry_blinking_led.svg)
 
-*Circuit diagram created by using [Fritzing](https://fritzing.org/home/)*
+*Diagram created using [Fritzing](https://fritzing.org/home/)*
+
+## Circuit Diagram
+Assuming, that the Raspberry is just an AC source, and using a green LED, which has a voltage drop of 2.3V, we can 
+calculate the required resistor.
+
+![Calculation of the blinking LED resistance](./images/resistance.equation.svg)
+
+The circuit can then be displayed as
+
+![Circuit diagram of the blinking LED example](./images/blinking_led.circuit.svg)
+
+*Diagram created using [EasyEDA](https://easyeda.com/)*
 
 ## Dependencies
 In order to be able to use TypeScript and the other packages, we need to include these dependencies in a package.json file.
@@ -87,3 +111,27 @@ npm run start
 ```
 in the console.
 After a short time, the LED should start blinking and stop after ten seconds.
+
+## Notes
+Using the same code, it is also possible to make multiple LEDs blink at the same time.
+For each LED that we add, we need
+
+- 1x Male-to-male jumper wire
+- 1x 100&Omega; resistor
+
+In the example we use five parallel green LEDs.
+### Parallel LED Design
+![Fritzing diagram of the parallel LED example](./images/blinking_multiple_led.svg)
+
+*Diagram created using [Fritzing](https://fritzing.org/home/)*
+
+### Parallel LED Circuit Diagram
+![Circuit diagram of the blinking LED example](./images/blinking_multiple_led.circuit.svg)
+
+*Diagram created using [EasyEDA](https://easyeda.com/)*
+
+## Further reading
+The next two projects we will look at, are similar to this one.
+They involve using multiple GPIO pins to make the LEDs blink at different times.
+1. [Traffic Light](./traffic-light)
+2. [Binary Counter](./binary-counter)
