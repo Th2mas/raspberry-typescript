@@ -61,6 +61,7 @@ import { Gpio } from 'onoff';
 Now we can configure the pin we're going to use.
 We use GPIO 24 (pin 18) and therefore we need to create a new Gpio object with the GPIO number.
 The second parameter of the constructor indicates, if the pin should be used as an 'in' or 'out' pin.
+We only tell the LED to turn on and off, so we can just use 'out' as the second parameter.
 ```typescript
 const LED = new Gpio(24, 'out');
 ``` 
