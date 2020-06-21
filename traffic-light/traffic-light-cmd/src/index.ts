@@ -8,15 +8,6 @@ const GREEN = new Gpio(21, 'out');
 const LEDs = [RED, YELLOW, GREEN];
 
 /**
- * Closes the application and frees all resources
- */
-function closeApplication(): void {
-    LEDs.forEach(LED => freePin(LED));
-    // @ts-ignore
-    process.exit(0);
-}
-
-/**
  * Turns the given pin off and frees the resources
  * @param pin the pin to be freed
  */
@@ -54,9 +45,16 @@ function switchTo(pin: Gpio): void {
     }
 }
 
-// Free all LED pins when the user closes the application
+// We have to handle a possible interrupt (CTRL+C)
 // @ts-ignore
-process.on('exit', () => closeApplication());
+process.on('SIGINT', () => process.exit(0));
+// @ts-ignore
+process.on('exit', () => {
+    console.log('Closing the application');
+    LEDs.forEach(LED => freePin(LED));
+    // @ts-ignore
+    process.exit(0);
+})
 
 // There should be no time limitation on when the user inputs something -> create an infinity loop
 while (true) {

@@ -18,8 +18,12 @@ app.use(bodyParser.json());
 // Use cors to be able to access the Raspberry from another device/browser
 app.use(cors());
 
-const port: number = 9000;
+// To make the interface available when we start the server, we will serve the client directly with the server
+// Now we will be able to connect to the client by just typing 'http://localhost:9000'
+// (or whatever address your Raspberry uses)
+app.use(express.static(__dirname + '/../client'));
 
+const port: number = 9000;
 const server = app.listen(port, () => console.log(`Traffic light app listening at http://localhost:${port}`));
 
 app.post('/', (req, res) => {
@@ -32,56 +36,39 @@ app.post('/', (req, res) => {
     switch (LED) {
         case "red":
             pin = RED;
-            console.log('Turning red LED on');
+            console.log('Toggling red LED');
             break;
         case "yellow":
             pin = YELLOW;
-            console.log('Turning yellow LED on');
+            console.log('Toggling yellow LED');
             break;
         case "green":
             pin = GREEN;
-            console.log('Turning green LED on');
+            console.log('Toggling green LED');
             break;
         default:
             // No default case
             break;
     }
-    switchTo(pin);
+    toggle(pin);
 
     // Send empty response for confirmation
     res.send();
 });
 
+// Listen to the 'CTRL+C' event
 process.on('SIGINT', () => {
     closeApplication();
     process.exit(0);
 });
 
 /**
- * Turns the given pin on and all other LED pins off
- * @param pin the pin to be turned on
+ * Toggles the state of the given pin
+ * @param pin the pin to be toggled
  */
-function switchTo(pin: Gpio): void {
-    switch (pin) {
-        case RED:
-            RED.writeSync(Gpio.HIGH);
-            YELLOW.writeSync(Gpio.LOW);
-            GREEN.writeSync(Gpio.LOW);
-            break;
-        case YELLOW:
-            RED.writeSync(Gpio.LOW);
-            YELLOW.writeSync(Gpio.HIGH);
-            GREEN.writeSync(Gpio.LOW);
-            break;
-        case GREEN:
-            RED.writeSync(Gpio.LOW);
-            YELLOW.writeSync(Gpio.LOW);
-            GREEN.writeSync(Gpio.HIGH);
-            break;
-        default:
-            // There is no default case, so just leave it blank
-            break;
-    }
+function toggle(pin: Gpio): void {
+    const status = pin.readSync();
+    pin.writeSync(status === Gpio.HIGH ? Gpio.LOW : Gpio.HIGH);
 }
 
 /**

@@ -133,6 +133,7 @@ After a short time, you should see how the traffic light is first red, then only
 \-
 
 ## Further reading
-The next step is letting the user control the LEDs manually.
-Therefore, we will continue with part 2,
-[traffic light with user input](../traffic-light-user)
+The next two projects let the user control the lights manually.
+You can either do this with the command line or with a user interface in a browser.
+1. [Traffic light with command line](./traffic-light-cmd)
+2. [Traffic light with user interface](./traffic-light-ui)

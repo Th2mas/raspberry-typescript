@@ -1,6 +1,7 @@
 # traffic-light-with-user-input
-This is the second part of the [Traffic Light](../traffic-light) project.
+This is the second part of the [Traffic Light](..) project.
 We do not change the circuit, but instead only work with the code.
+After this project is done, the user will be able to interact with the lights manually over the command line.
 
 ## Table of contents
 1. [Components](#components)
@@ -42,10 +43,10 @@ The packages needed in this project are
 - [typescript](https://www.npmjs.com/package/typescript)
 - [ts-node](https://www.npmjs.com/package/ts-node)
 
-As a reference, the full can be found in the [package.json](./package.json) file.
+As a reference, the full code can be found in the [package.json](./package.json) file.
 
 ## Code
-We continue working with the [index.ts](../traffic-light/src/index.ts) file from the [Traffic Light](../traffic-light) project.
+We continue working with the [index.ts](../src/index.ts) file from the [Traffic Light](..) project.
 
 ### Single shining LED
 Instead of turning each LED only on, we can make each LED to be the only one to be turned on.
@@ -77,12 +78,12 @@ function switchTo(pin: Gpio): void {
 ```
 
 ### User input
-With the `switchTo` code we can now introduce some interaction with the LEDs.
+With the `switchTo` code we can introduce some interaction with the LEDs.
 Instead of waiting for timeouts, we can let the user decide when and which LED to turn on.
 This can be done by introducing some user input.
 
 The goal here is to provide a CLI, which prompts the user to type in a color.
-For that we need to include a new package, prompt-sync, to the package.json file.
+For that we need to include a new package, prompt-sync, in the package.json file.
 
 Now we have to remove all timeouts, since we just wait for the user input.
 Since the user should have no time limitation on choosing the desired LED, we need to introduce an infinite loop
@@ -117,36 +118,34 @@ while (true) {
 If the user chooses one of the available LEDs, the selected LED should be turned on while the rest should stay off.
 
 In order to be able to close the program gracefully, we need to introduce an event handler, which catches a 'CTRL+C'.
-This can be done with the built-in `process` object, which handles those kind of events.
-We can quickly build a closeApplication method
+This can be done with the builtin `process`'s event handlers for the 'SIGINT' event.
+The code might look like this
 
 ```typescript
-function closeApplication(): void {
-    LEDs.forEach(LED => freePin(LED));
-    process.exit();
-}
-```
-
-Now we just need to include the event listener before we start the while loop.
-This is done with
-
-```typescript
-process.on('exit', () => closeApplication());
+process.on('SIGINT', () => process.exit(0));
+process.on('exit', () => cleanupAndClose());
 ```
 
 As a reference, the full code can be found in the [index.ts](src/index.ts) file.
 
 ## Run application
+Open the console in the directory in which you stored the package.json file on your Raspberry Pi.
+
+To run the application, type
+```shell script
+npm run start
+```
+in the console.
+After a short time, you should a prompt in the console, asking you to input the color of the LED.
+If you type in one of the available colors, you should see how this one turns on, while the previous LED turns off 
+(if there was one).
+
+You can close the application by pressing 'CTRL+C'
 
 ## Notes
-
-### RESTful user input
-Instead of working with a command line, it is more user-friendly to have a graphical user interface, where the user just 
-needs to switch some UI buttons.
-Therefore, we need to create a client-server architecture, where the server handles user requests.
-We decided to use the `express` package, which offers simple REST endpoints.
-
-As a reference, the full server code can be found in the [server.ts](src/server/server.ts) file, while the 
-client can be found in the [client](./src/client) directory.
+\-
 
 ## Further reading
+The next step is implementing a more user-friendly graphical user interface, where the user just needs to 
+switch some UI buttons.
+This is done in the next project, [Traffic light with user interface](../traffic-light-ui).
