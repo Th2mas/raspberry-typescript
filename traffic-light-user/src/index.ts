@@ -1,9 +1,20 @@
 import {Gpio} from 'onoff';
+import * as PromptSync from 'prompt-sync';
 
+const prompt = PromptSync({sigint: true});
 const RED = new Gpio(16, 'out');
 const YELLOW = new Gpio(20, 'out');
 const GREEN = new Gpio(21, 'out');
 const LEDs = [RED, YELLOW, GREEN];
+
+/**
+ * Closes the application and frees all resources
+ */
+function closeApplication(): void {
+    LEDs.forEach(LED => freePin(LED));
+    // @ts-ignore
+    process.exit(0);
+}
 
 /**
  * Turns the given pin off and frees the resources
@@ -43,9 +54,33 @@ function switchTo(pin: Gpio): void {
     }
 }
 
-setTimeout(() => switchTo(RED), 0);
-setTimeout(() => switchTo(YELLOW), 2000);
-setTimeout(() => switchTo(GREEN), 4000);
+// Free all LED pins when the user closes the application
+// @ts-ignore
+process.on('exit', () => closeApplication());
 
-// Free all LED pins
-setTimeout(() => LEDs.forEach(LED => freePin(LED)), 6000);
+// There should be no time limitation on when the user inputs something -> create an infinity loop
+while (true) {
+    // Get user input
+    let led = prompt('Which LED should be turned on? ').toLowerCase();
+    if (!(led === 'red' || led === 'yellow' || led === 'green')) {
+        console.log(`Sorry, we don't know ${led}. Please choose 'red', 'yellow' or 'green'.`);
+        continue;
+    }
+    // Switch to the correct pin
+    let pin;
+    switch (led) {
+        case "red":
+            pin = RED;
+            break;
+        case "yellow":
+            pin = YELLOW;
+            break;
+        case "green":
+            pin = GREEN;
+            break;
+        default:
+            // No default case
+            break;
+    }
+    switchTo(pin);
+}

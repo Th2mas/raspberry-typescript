@@ -14,8 +14,6 @@ We assume, that you are already familiar with TypeScript, know how to create a p
 5. [Code](#code)
 6. [Run application](#run-application)
 7. [Notes](#notes)
-    1. [Single shining LED](#single-shining-led)
-    2. [User input](#user-input)
 8. [Further reading](#further-reading)
 
 ## Components
@@ -132,98 +130,9 @@ in the console.
 After a short time, you should see how the traffic light is first red, then only yellow and then finally only green.  
 
 ## Notes
-### Single shining LED
-Instead of turning each LED only on, we can also make each LED to be the only one to be turned on.
-For this, we need to create a separate method, where we set the currently inactive LEDs states to `Gpio.LOW`.
-We call this method `switchTo` with the pin to be turned on as the parameter
-```typescript
-function switchTo(pin: Gpio): void {
-    switch (pin) {
-        case RED:
-            RED.writeSync(Gpio.HIGH);
-            YELLOW.writeSync(Gpio.LOW);
-            GREEN.writeSync(Gpio.LOW);
-            break;
-        case YELLOW:
-            RED.writeSync(Gpio.LOW);
-            YELLOW.writeSync(Gpio.HIGH);
-            GREEN.writeSync(Gpio.LOW);
-            break;
-        case GREEN:
-            RED.writeSync(Gpio.LOW);
-            YELLOW.writeSync(Gpio.LOW);
-            GREEN.writeSync(Gpio.HIGH);
-            break;
-        default:
-            break;
-    }
-}
-```
-
-As a reference, the full code can be found in the [index-individual.ts](src/index-individual.ts) file.
-
-### User input
-With the `switchTo` code we can now also introduce some interaction with the LEDs.
-Instead of waiting for timeouts, we can let the user decide when and which LED to turn on.
-This can be done by introducing some user input.
-
-The goal here is to provide a CLI, which prompts the user to type in a color, or the GPIO code.
-For that we need to include a new package to the package.json file.
-You can install it with
-
-```shell script
-npm install prompt-sync
-```
-
-Now we have to remove all timeouts, since we just wait for the user input.
-Since the user should have no time limitation on choosing the desired LED, we need to introduce an infinite loop
-```typescript
-while (true) {
-    // Get user input
-    let led = prompt('Which LED should be turned on? ').toLowerCase();
-    if (!(led === 'red' || led === 'yellow' || led === 'green')) {
-        console.log(`Sorry, we don't know ${led}. Please choose 'red', 'yellow' or 'green'.`);
-        continue;
-    }
-    // Switch to the correct pin
-    let pin;
-    switch (led) {
-        case "red":
-            pin = RED;
-            break;
-        case "yellow":
-            pin = YELLOW;
-            break;
-        case "green":
-            pin = GREEN;
-            break;
-        default:
-            // No default case
-            break;
-    }
-    switchTo(pin);
-}
-```
-If the user chooses one of the available LEDs, the selected LED should be turned on while the rest should stay off.
-In order to be able to close the program gracefully, we need to introduce an event handler, which catches a 'CTRL+C'.
-This can be done with the built-in `process` object, which handles those kind of events.
-We can quickly build a closeApplication method
-```typescript
-function closeApplication(): void {
-    LEDs.forEach(LED => freePin(LED));
-    process.exit();
-}
-```
-Now we just need to include the event listeners before we start the while loop.
-This is done with
-```typescript
-process.on('exit', () => closeApplication());
-```
-
-As a reference, the full code can be found in the [index-user-input-cmd.ts](src/index-user-input-cmd.ts) file.
-
-### User input with WebSocket
-Coming soon
+\-
 
 ## Further reading
-1. [Binary counter](../binary-counter)
+The next step is letting the user control the LEDs manually.
+Therefore, we will continue with part 2,
+[traffic light with user input](../traffic-light-user)
