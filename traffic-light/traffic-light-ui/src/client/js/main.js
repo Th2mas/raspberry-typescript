@@ -7,11 +7,11 @@ const greenLEDButton = document.querySelector('#switch-led-green');
 
 // Whenever one of the LEDs gets enabled, we need to submit the new information to the server
 // and disable the remaining buttons
-redLEDButton.addEventListener('click', () => turnOn('red'));
-yellowLEDButton.addEventListener('click', () => turnOn('yellow'));
-greenLEDButton.addEventListener('click', () => turnOn('green'));
+redLEDButton.addEventListener('click', () => toggle('red'));
+yellowLEDButton.addEventListener('click', () => toggle('yellow'));
+greenLEDButton.addEventListener('click', () => toggle('green'));
 
-const turnOn = async (color) => {
+const toggle = async (color) => {
   console.log(`Toggling ${color}`);
   const data = JSON.stringify({led: color});
   try {
