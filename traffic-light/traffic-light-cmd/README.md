@@ -1,6 +1,9 @@
 # traffic-light-with-user-input
 This is the second part of the [Traffic Light](..) project.
 We do not change the circuit, but instead only work with the code.
+
+Instead of waiting for timeout, the user should be able to turn on the desired LED manually.
+We can do this by providing a command line interface (CLI).
 After this project is done, the user will be able to interact with the lights manually over the command line.
 
 ## Table of contents
