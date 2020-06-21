@@ -11,10 +11,13 @@
   "license": "ISC",
   "dependencies": {
     "onoff": "^6.0.0",
+    "prompt-sync": "^4.2.0",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.5"
   },
   "devDependencies": {
-    "@types/onoff": "^4.1.0"
+    "@types/node": "^14.0.13",
+    "@types/onoff": "^4.1.0",
+    "@types/prompt-sync": "^4.1.0"
   }
 }

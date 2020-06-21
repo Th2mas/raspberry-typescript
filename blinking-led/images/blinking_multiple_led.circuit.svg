@@ -13,13 +13,13 @@
            c_partid="part_lib_ggee8c7ff754de734e6" id="ggee8c7ff754de734e6" locked="0" c_shapetype="group"
            c_etype="pinpart" puuid="b600ab0518154c0c9d2ed5ca96244c69" uuid="36be002046ee442daec3a30b0f22c9fe"
            convert_to_pcb="yes" add_into_bom="yes" c_rotation="90">
-            <g c_partid="part_annotation" id="gge723" display="none" c_shapetype="group">
-                <text c_note="note_name" x="0" y="7" fill="#000080" font-family="Arial" font-size="7pt" font-weight=""
-                      font-style="" dominant-baseline="" text-anchor="start">100
+            <g c_partid="part_annotation" id="gge723" c_shapetype="group">
+                <text c_note="note_name" x="504" y="-580" fill="#000000" font-family="Arial" font-size="7pt" font-weight=""
+                      font-style="" dominant-baseline="" text-anchor="start">100&#x03A9;
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge461" display="none" c_shapetype="group">
-                <text c_note="note_pre" x="1005.72" y="-1186.48" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1005.72" y="-1186.48" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">R1
                 </text>
             </g>
@@ -76,7 +76,7 @@
            puuid="05ca98c924be4d7f9936cfbc00888d3a" uuid="dacce69b1c194bea92742be765e82cfc" convert_to_pcb="yes"
            add_into_bom="yes">
             <g c_partid="part_annotation" id="gge378" display="none" c_shapetype="group">
-                <text c_note="note_name" x="472" y="-597.87" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_name" x="472" y="-597.87" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">SIN(0 1 50 10m 1 0)
                 </text>
             </g>
@@ -128,12 +128,12 @@
            c_etype="pinpart" puuid="" uuid="8d4db5be82ea40728bee6ee8a1231479" convert_to_pcb="yes" add_into_bom="yes"
            c_rotation="270">
             <g c_partid="part_annotation" id="gge379" display="none" c_shapetype="group">
-                <text c_note="note_name" x="518" y="-622.87" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_name" x="518" y="-622.87" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge458" display="none" c_shapetype="group">
-                <text c_note="note_pre" x="1018.5" y="-1296.48" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1018.5" y="-1296.48" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED1
                 </text>
             </g>
@@ -186,12 +186,12 @@
            c_etype="pinpart" puuid="" uuid="8d4db5be82ea40728bee6ee8a1231479" convert_to_pcb="yes" add_into_bom="yes"
            c_rotation="270">
             <g c_partid="part_annotation" id="gge406" display="none" c_shapetype="group">
-                <text c_note="note_name" x="135" y="-928" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_name" x="135" y="-928" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge408" c_shapetype="group">
-                <text c_note="note_pre" x="1758.48" y="212.16" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1758.48" y="212.16" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED2
                 </text>
             </g>
@@ -244,12 +244,12 @@
            c_etype="pinpart" puuid="" uuid="8d4db5be82ea40728bee6ee8a1231479" convert_to_pcb="yes" add_into_bom="yes"
            c_rotation="270">
             <g c_partid="part_annotation" id="gge462" display="none" c_shapetype="group">
-                <text c_note="note_name" x="598" y="-622.81" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_name" x="598" y="-622.81" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge514" display="none" c_shapetype="group">
-                <text c_note="note_pre" x="1178.5" y="-1297" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1178.5" y="-1297" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED3
                 </text>
             </g>
@@ -302,12 +302,12 @@
            c_etype="pinpart" puuid="" uuid="8d4db5be82ea40728bee6ee8a1231479" convert_to_pcb="yes" add_into_bom="yes"
            c_rotation="270">
             <g c_partid="part_annotation" id="gge535" display="none" c_shapetype="group">
-                <text c_note="note_name" x="638" y="-622.81" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_name" x="638" y="-622.81" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge614" display="none" c_shapetype="group">
-                <text c_note="note_pre" x="1258.5" y="-1297" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1258.5" y="-1297" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED4
                 </text>
             </g>
@@ -360,12 +360,12 @@
            c_etype="pinpart" puuid="" uuid="8d4db5be82ea40728bee6ee8a1231479" convert_to_pcb="yes" add_into_bom="yes"
            c_rotation="270">
             <g c_partid="part_annotation" id="gge562" display="none" c_shapetype="group">
-                <text c_note="note_name" x="255" y="-928" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_name" x="255" y="-928" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge615" display="none" c_shapetype="group">
-                <text c_note="note_pre" x="1338.5" y="-1297" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1338.5" y="-1297" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">LED5
                 </text>
             </g>
@@ -418,12 +418,12 @@
            c_etype="pinpart" puuid="b9efc06d0fb742f99a478d48de211eb9" uuid="a5cb8fc803084158bb825edf2c7447ef"
            convert_to_pcb="yes" add_into_bom="yes" c_rotation="90">
             <g c_partid="part_annotation" id="gge722" c_shapetype="group">
-                <text c_note="note_name" x="0" y="7" fill="#000080" font-family="Arial" font-size="7pt" font-weight=""
-                      font-style="" dominant-baseline="" text-anchor="start">100
+                <text c_note="note_name" x="544" y="-580" fill="#000000" font-family="Arial" font-size="7pt" font-weight=""
+                      font-style="" dominant-baseline="" text-anchor="start">100&#x03A9;
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge720" display="none" c_shapetype="group">
-                <text c_note="note_pre" x="1083.66" y="-1187" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1083.66" y="-1187" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">R2
                 </text>
             </g>
@@ -461,13 +461,13 @@
            c_partid="part_lib_gge085d04807930dc9d" id="gge085d04807930dc9d" locked="0" c_shapetype="group"
            c_etype="pinpart" puuid="b9efc06d0fb742f99a478d48de211eb9" uuid="a5cb8fc803084158bb825edf2c7447ef"
            convert_to_pcb="yes" add_into_bom="yes" c_rotation="90">
-            <g c_partid="part_annotation" id="gge725" display="none" c_shapetype="group">
-                <text c_note="note_name" x="0" y="7" fill="#000080" font-family="Arial" font-size="7pt" font-weight=""
-                      font-style="" dominant-baseline="" text-anchor="start">100
+            <g c_partid="part_annotation" id="gge725" c_shapetype="group">
+                <text c_note="note_name" x="584" y="-580" fill="#000000" font-family="Arial" font-size="7pt" font-weight=""
+                      font-style="" dominant-baseline="" text-anchor="start">100&#x03A9;
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge724" display="none" c_shapetype="group">
-                <text c_note="note_pre" x="1362.76" y="-1187" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1362.76" y="-1187" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">R3
                 </text>
             </g>
@@ -506,12 +506,12 @@
            c_etype="pinpart" puuid="b9efc06d0fb742f99a478d48de211eb9" uuid="a5cb8fc803084158bb825edf2c7447ef"
            convert_to_pcb="yes" add_into_bom="yes" c_rotation="90">
             <g c_partid="part_annotation" id="gge727" c_shapetype="group">
-                <text c_note="note_name" x="0" y="7" fill="#000080" font-family="Arial" font-size="7pt"
-                      text-anchor="start">100
+                <text c_note="note_name" x="624" y="-580" fill="#000000" font-family="Arial" font-size="7pt"
+                      text-anchor="start">100&#x03A9;
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge726" c_shapetype="group">
-                <text c_note="note_pre" x="1039.5" y="-1466.52" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1039.5" y="-1466.52" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">R4
                 </text>
             </g>
@@ -549,13 +549,13 @@
            c_partid="part_lib_ggeae5c0c26bc2a9b3e" id="ggeae5c0c26bc2a9b3e" locked="0" c_shapetype="group"
            c_etype="pinpart" puuid="b9efc06d0fb742f99a478d48de211eb9" uuid="a5cb8fc803084158bb825edf2c7447ef"
            convert_to_pcb="yes" add_into_bom="yes" c_rotation="90">
-            <g c_partid="part_annotation" id="gge728" display="none" c_shapetype="group">
-                <text c_note="note_name" x="1056.08" y="-288" fill="#000080" font-family="Arial" font-size="7pt"
-                      font-weight="" font-style="" dominant-baseline="" text-anchor="start">100
+            <g c_partid="part_annotation" id="gge728" c_shapetype="group">
+                <text c_note="note_name" x="464" y="-580" fill="#000000" font-family="Arial" font-size="7pt"
+                      font-weight="" font-style="" dominant-baseline="" text-anchor="start">100&#x03A9;
                 </text>
             </g>
             <g c_partid="part_annotation" id="gge729" display="none" c_shapetype="group">
-                <text c_note="note_pre" x="1317" y="-1187" fill="#000080" font-family="Arial" font-size="7pt"
+                <text c_note="note_pre" x="1317" y="-1187" fill="#000000" font-family="Arial" font-size="7pt"
                       font-weight="" font-style="" dominant-baseline="" text-anchor="start">R5
                 </text>
             </g>

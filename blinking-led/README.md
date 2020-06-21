@@ -107,7 +107,7 @@ As a reference, the full code can be found in the [index.ts](./src/index.ts) fil
 Open the console in the directory in which you stored the package.json file on your Raspberry Pi.
 
 To run the application, type
-```
+```shell script
 npm run start
 ```
 in the console.
