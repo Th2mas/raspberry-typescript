@@ -1,80 +1,35 @@
-import {Gpio} from 'onoff';
-import * as PromptSync from 'prompt-sync';
+import * as rpio from 'rpio';
+import * as readline from 'readline';
 
-const prompt = PromptSync({sigint: true});
-const RED = new Gpio(16, 'out');
-const YELLOW = new Gpio(20, 'out');
-const GREEN = new Gpio(21, 'out');
-const LEDs = [RED, YELLOW, GREEN];
+const PIN_RED = 36;
+const PIN_YELLOW = 38;
+const PIN_GREEN = 40;
+const LEDs = [PIN_RED, PIN_YELLOW, PIN_GREEN];
 
-/**
- * Turns the given pin off and frees the resources
- * @param pin the pin to be freed
- */
-function freePin(pin: Gpio): void {
-    // Turn the pin off
-    pin.writeSync(Gpio.LOW);
-    // Free resources
-    pin.unexport();
-}
+rpio.open(PIN_RED, rpio.OUTPUT, rpio.LOW);
+rpio.open(PIN_YELLOW, rpio.OUTPUT, rpio.LOW);
+rpio.open(PIN_GREEN, rpio.OUTPUT, rpio.LOW);
 
 /**
  * Turns the given pin on and all other LED pins off
  * @param pin the pin to be turned on
  */
-function switchTo(pin: Gpio): void {
-    switch (pin) {
-        case RED:
-            RED.writeSync(Gpio.HIGH);
-            YELLOW.writeSync(Gpio.LOW);
-            GREEN.writeSync(Gpio.LOW);
-            break;
-        case YELLOW:
-            RED.writeSync(Gpio.LOW);
-            YELLOW.writeSync(Gpio.HIGH);
-            GREEN.writeSync(Gpio.LOW);
-            break;
-        case GREEN:
-            RED.writeSync(Gpio.LOW);
-            YELLOW.writeSync(Gpio.LOW);
-            GREEN.writeSync(Gpio.HIGH);
-            break;
-        default:
-            // There is no default case, so just leave it blank
-            break;
-    }
+function switchTo(pin: number): void {
+    LEDs.forEach(LED => rpio.write(LED, pin === LED ? rpio.HIGH : rpio.LOW));
 }
 
-// We have to handle a possible interrupt (CTRL+C)
-// @ts-ignore
-process.on('SIGINT', () => process.exit(0));
-// @ts-ignore
-process.on('exit', () => {
-    console.log('Closing the application');
-    LEDs.forEach(LED => freePin(LED));
-    // @ts-ignore
-    process.exit(0);
-})
-
-// There should be no time limitation on when the user inputs something -> create an infinity loop
-while (true) {
-    // Get user input
-    let led = prompt('Which LED should be turned on? ').toLowerCase();
-    if (!(led === 'red' || led === 'yellow' || led === 'green')) {
-        console.log(`Sorry, we don't know ${led}. Please choose 'red', 'yellow' or 'green'.`);
-        continue;
-    }
+function switchColor(ledColor: string): void {
     // Switch to the correct pin
     let pin;
-    switch (led) {
+    switch (ledColor) {
         case "red":
-            pin = RED;
+            pin = PIN_RED;
             break;
         case "yellow":
-            pin = YELLOW;
+            pin = PIN_YELLOW;
             break;
         case "green":
-            pin = GREEN;
+            pin = PIN_GREEN;
             break;
         default:
             // No default case
@@ -82,3 +37,29 @@ while (true) {
     }
     switchTo(pin);
 }
+
+// Now we can create the user prompt
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+rl.on('close', () => {
+    console.log('\nClosing the application');
+    LEDs.forEach(LED => rpio.close(LED));
+    process.exit(0);
+});
+
+rl.setPrompt('Which LED should be turned on? ');
+rl.prompt();
+
+// There should be no time limitation on when the user inputs something
+// Get user input
+rl.on('line', led => {
+    if (!(led === 'red' || led === 'yellow' || led === 'green')) {
+        console.log(`Sorry, we don't know ${led}. Please choose 'red', 'yellow' or 'green'.`);
+    } else {
+        switchColor(led);
+    }
+    rl.prompt();
+});

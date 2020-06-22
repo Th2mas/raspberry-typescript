@@ -36,13 +36,12 @@ After this project is done, the user will be able to interact with the lights ma
 
 *Diagram created using [EasyEDA](https://easyeda.com/)*
 
-
 ## Dependencies
 In order to be able to use TypeScript and the other packages, we need to include these dependencies in a package.json file.
 The packages needed in this project are
 
-- [onoff](https://www.npmjs.com/package/onoff)
-- [prompt-sync](https://www.npmjs.com/package/prompt-sync)
+- [readline](https://www.npmjs.com/package/readline)
+- [rpio](https://www.npmjs.com/package/rpio)
 - [typescript](https://www.npmjs.com/package/typescript)
 - [ts-node](https://www.npmjs.com/package/ts-node)
 
@@ -53,32 +52,15 @@ We continue working with the [index.ts](../src/index.ts) file from the [Traffic 
 
 ### Single shining LED
 Instead of turning each LED only on, we can make each LED to be the only one to be turned on.
-For this, we need to create a separate method, where we set the currently inactive LEDs states to 'off' (=`Gpio.LOW`).
+For this, we need to create a separate method, where we set the currently inactive LEDs states to 'off' (=`rpio.LOW`).
 
 We call this method `switchTo`, with the pin to be turned on as the parameter
 ```typescript
-function switchTo(pin: Gpio): void {
-    switch (pin) {
-        case RED:
-            RED.writeSync(Gpio.HIGH);
-            YELLOW.writeSync(Gpio.LOW);
-            GREEN.writeSync(Gpio.LOW);
-            break;
-        case YELLOW:
-            RED.writeSync(Gpio.LOW);
-            YELLOW.writeSync(Gpio.HIGH);
-            GREEN.writeSync(Gpio.LOW);
-            break;
-        case GREEN:
-            RED.writeSync(Gpio.LOW);
-            YELLOW.writeSync(Gpio.LOW);
-            GREEN.writeSync(Gpio.HIGH);
-            break;
-        default:
-            break;
-    }
+function switchTo(pin: number): void {
+    LEDs.forEach(LED => rpio.write(LED, pin === LED ? rpio.HIGH : rpio.LOW));
 }
 ```
+All but the passed pin will therefore be set to `rpio.LOW`, while the passed pin will be set to `rpio.HIGH`.
 
 ### User input
 With the `switchTo` code we can introduce some interaction with the LEDs.
@@ -86,29 +68,23 @@ Instead of waiting for timeouts, we can let the user decide when and which LED t
 This can be done by introducing some user input.
 
 The goal here is to provide a CLI, which prompts the user to type in a color.
-For that we need to include a new package, prompt-sync, in the package.json file.
+For that we need to include a new package, `readline`, in the package.json file.
 
-Now we have to remove all timeouts, since we just wait for the user input.
-Since the user should have no time limitation on choosing the desired LED, we need to introduce an infinite loop
+If the user chooses one of the available LEDs, the selected LED should be turned on while the rest should stay off.
+We do this by calling the `switchColor` method, when we receive a valid color.
 ```typescript
-while (true) {
-    // Get user input
-    let led = prompt('Which LED should be turned on? ').toLowerCase();
-    if (!(led === 'red' || led === 'yellow' || led === 'green')) {
-        console.log(`Sorry, we don't know ${led}. Please choose 'red', 'yellow' or 'green'.`);
-        continue;
-    }
+function switchColor(ledColor: string): void {
     // Switch to the correct pin
     let pin;
-    switch (led) {
+    switch (ledColor) {
         case "red":
-            pin = RED;
+            pin = PIN_RED;
             break;
         case "yellow":
-            pin = YELLOW;
+            pin = PIN_YELLOW;
             break;
         case "green":
-            pin = GREEN;
+            pin = PIN_GREEN;
             break;
         default:
             // No default case
@@ -118,16 +94,35 @@ while (true) {
 }
 ```
 
-If the user chooses one of the available LEDs, the selected LED should be turned on while the rest should stay off.
+Now we have to remove all timeouts, since we just wait for the user input.
+Since the user should have no time limitation on choosing the desired LED, we need to introduce a readline event listener.
+```typescript
+rl.setPrompt('Which LED should be turned on? ');
+rl.prompt();
+
+rl.on('line', led => {
+    if (!(led === 'red' || led === 'yellow' || led === 'green')) {
+        console.log(`Sorry, we don't know ${led}. Please choose 'red', 'yellow' or 'green'.`);
+    } else {
+        switchColor(led);
+    }
+    rl.prompt();
+});
+
+```
 
 In order to be able to close the program gracefully, we need to introduce an event handler, which catches a 'CTRL+C'.
-This can be done with the builtin `process`'s event handlers for the 'SIGINT' event.
-The code might look like this
+This can be done with `readline`'s `on('close', ...)` event listener.
+The code for releasing the pins and closing the app looks like this
 
 ```typescript
-process.on('SIGINT', () => process.exit(0));
-process.on('exit', () => cleanupAndClose());
+rl.on('close', () => {
+    console.log('\nClosing the application');
+    LEDs.forEach(LED => rpio.close(LED));
+    process.exit(0);
+});
 ```
+With this we have created an app, which listens for some user input in the command line.
 
 As a reference, the full code can be found in the [index.ts](src/index.ts) file.
 
