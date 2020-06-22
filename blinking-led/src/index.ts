@@ -43,7 +43,7 @@ function toggleState(pin: number): void {
 function endToggling(pin: number, interval: NodeJS.Timeout): void {
     clearInterval(interval);
     // Turn the pin off
-    rpio.write(pin, rpio.LOW);
+    rpio.close(pin);
 }
 
 const blinkInterval = setInterval(() => toggleState(pinNumber), blinkTime);

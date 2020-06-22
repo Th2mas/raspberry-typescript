@@ -51,7 +51,7 @@ The packages needed in this project are
 - [body-parser](https://www.npmjs.com/package/body-parser)
 - [cors](https://www.npmjs.com/package/cors)
 - [express](https://www.npmjs.com/package/express)
-- [onoff](https://www.npmjs.com/package/onoff)
+- [rpio](https://www.npmjs.com/package/rpio)
 - [ts-node](https://www.npmjs.com/package/ts-node)
 - [typescript](https://www.npmjs.com/package/typescript)
 
@@ -123,21 +123,7 @@ app.post('/', (req, res) => {
         res.send(`Sorry, we don't know ${LED}. Please choose 'red', 'yellow' or 'green'.`);
     }
     // Switch to the correct pin
-    let pin: Gpio;
-    switch (LED) {
-        case "red":
-            pin = RED;
-            break;
-        case "yellow":
-            pin = YELLOW;
-            break;
-        case "green":
-            pin = GREEN;
-            break;
-        default:
-            break;
-    }
-    toggle(pin);
+    switchColor(LED);
 
     // Send empty response for confirmation
     res.send();
@@ -149,9 +135,10 @@ We made a slight change here: We went back to the `toggle` method, which was use
 This gives the user the ability to control the LEDs individually.
 The toggle method toggles between `Gpio.LOW` and `Gpio.HIGH`.
 ```typescript
-function toggle(pin: Gpio): void {
-    const status = pin.readSync();
-    pin.writeSync(status === Gpio.HIGH ? Gpio.LOW : Gpio.HIGH);
+function toggleState(pin: number): void {
+    const pinState = rpio.read(pin);
+    const outputState = pinState === rpio.HIGH ? rpio.LOW : rpio.HIGH;
+    rpio.write(pin, outputState);
 }
 ```
 Lastly, we need to handle closing the application in the server.
@@ -159,7 +146,7 @@ We have already covered this in the [Traffic Light with command line](../traffic
 The listener for an interrupt looks like
 ```typescript
 process.on('SIGINT', () => {
-    LEDs.forEach(LED => freePin(LED));    
+    LEDs.forEach(LED => rpio.close(LED));  
     server.close();
     process.exit(0);
 });

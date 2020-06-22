@@ -1,13 +1,17 @@
-import {Gpio} from 'onoff';
+import * as rpio from 'rpio';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 
 // Still the same GPIO code
-const RED = new Gpio(16, 'out');
-const YELLOW = new Gpio(20, 'out');
-const GREEN = new Gpio(21, 'out');
-const LEDs = [RED, YELLOW, GREEN];
+const PIN_RED = 36;
+const PIN_YELLOW = 38;
+const PIN_GREEN = 40;
+const LEDs = [PIN_RED, PIN_YELLOW, PIN_GREEN];
+
+rpio.open(PIN_RED, rpio.OUTPUT, rpio.LOW);
+rpio.open(PIN_YELLOW, rpio.OUTPUT, rpio.LOW);
+rpio.open(PIN_GREEN, rpio.OUTPUT, rpio.LOW);
 
 // Now we can create the actual server
 const app = express();
@@ -31,26 +35,7 @@ app.post('/', (req, res) => {
     if (!(LED === 'red' || LED === 'yellow' || LED === 'green')) {
         res.send(`Sorry, we don't know ${LED}. Please choose 'red', 'yellow' or 'green'.`);
     }
-    // Switch to the correct pin
-    let pin: Gpio;
-    switch (LED) {
-        case "red":
-            pin = RED;
-            console.log('Toggling red LED');
-            break;
-        case "yellow":
-            pin = YELLOW;
-            console.log('Toggling yellow LED');
-            break;
-        case "green":
-            pin = GREEN;
-            console.log('Toggling green LED');
-            break;
-        default:
-            // No default case
-            break;
-    }
-    toggle(pin);
+    switchColor(LED);
 
     // Send empty response for confirmation
     res.send();
@@ -63,12 +48,37 @@ process.on('SIGINT', () => {
 });
 
 /**
+ * Toggles the LED with the passed color
+ * @param ledColor the color of the LED which should be toggled
+ */
+function switchColor(ledColor: string): void {
+    // Switch to the correct pin
+    let pin;
+    switch (ledColor) {
+        case "red":
+            pin = PIN_RED;
+            break;
+        case "yellow":
+            pin = PIN_YELLOW;
+            break;
+        case "green":
+            pin = PIN_GREEN;
+            break;
+        default:
+            // No default case
+            break;
+    }
+    toggleState(pin);
+}
+
+/**
  * Toggles the state of the given pin
  * @param pin the pin to be toggled
  */
-function toggle(pin: Gpio): void {
-    const status = pin.readSync();
-    pin.writeSync(status === Gpio.HIGH ? Gpio.LOW : Gpio.HIGH);
+function toggleState(pin: number): void {
+    const pinState = rpio.read(pin);
+    const outputState = pinState === rpio.HIGH ? rpio.LOW : rpio.HIGH;
+    rpio.write(pin, outputState);
 }
 
 /**
@@ -78,19 +88,8 @@ function closeApplication(): void {
     console.log('Closing the server');
 
     // Free all LED pins when the user closes the application
-    LEDs.forEach(LED => freePin(LED));
+    LEDs.forEach(LED => rpio.close(LED));
 
     // Close the server
     server.close();
-}
-
-/**
- * Turns the given pin off and frees the resources
- * @param pin the pin to be freed
- */
-function freePin(pin: Gpio): void {
-    // Turn the pin off
-    pin.writeSync(Gpio.LOW);
-    // Free resources
-    pin.unexport();
 }

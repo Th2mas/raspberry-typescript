@@ -10,34 +10,6 @@ rpio.open(PIN_RED, rpio.OUTPUT, rpio.LOW);
 rpio.open(PIN_YELLOW, rpio.OUTPUT, rpio.LOW);
 rpio.open(PIN_GREEN, rpio.OUTPUT, rpio.LOW);
 
-/**
- * Turns the given pin on and all other LED pins off
- * @param pin the pin to be turned on
- */
-function switchTo(pin: number): void {
-    LEDs.forEach(LED => rpio.write(LED, pin === LED ? rpio.HIGH : rpio.LOW));
-}
-
-function switchColor(ledColor: string): void {
-    // Switch to the correct pin
-    let pin;
-    switch (ledColor) {
-        case "red":
-            pin = PIN_RED;
-            break;
-        case "yellow":
-            pin = PIN_YELLOW;
-            break;
-        case "green":
-            pin = PIN_GREEN;
-            break;
-        default:
-            // No default case
-            break;
-    }
-    switchTo(pin);
-}
-
 // Now we can create the user prompt
 const rl = readline.createInterface({
     input: process.stdin,
@@ -63,3 +35,35 @@ rl.on('line', led => {
     }
     rl.prompt();
 });
+
+/**
+ * Switches to the LED with the passed color
+ * @param ledColor the color of the LED which needs to be turned on
+ */
+function switchColor(ledColor: string): void {
+    // Switch to the correct pin
+    let pin;
+    switch (ledColor) {
+        case "red":
+            pin = PIN_RED;
+            break;
+        case "yellow":
+            pin = PIN_YELLOW;
+            break;
+        case "green":
+            pin = PIN_GREEN;
+            break;
+        default:
+            // No default case
+            break;
+    }
+    switchTo(pin);
+}
+
+/**
+ * Turns the given pin on and all other LED pins off
+ * @param pin the pin to be turned on
+ */
+function switchTo(pin: number): void {
+    LEDs.forEach(LED => rpio.write(LED, pin === LED ? rpio.HIGH : rpio.LOW));
+}
