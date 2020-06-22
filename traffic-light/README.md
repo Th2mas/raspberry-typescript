@@ -70,27 +70,32 @@ Since both values are below 20mA, we can safely use just the 100&Omega; resistor
 In order to be able to use TypeScript and the other packages, we need to include these dependencies in a package.json file.
 The packages needed in this project are
 
-- [onoff](https://www.npmjs.com/package/onoff)
+- [rpio](https://www.npmjs.com/package/rpio)
 - [typescript](https://www.npmjs.com/package/typescript)
 - [ts-node](https://www.npmjs.com/package/ts-node)
 
 As a reference, the full can be found in the [package.json](./package.json) file.
 
 ## Code
-First we need to include the `onoff` package, which handles the communication with the Raspberry Pi.
+First we need to include the `rpio` package, which handles the communication with the Raspberry Pi.
 ```typescript
-import { Gpio } from 'onoff';
+import * as rpio from 'rpio';
 ``` 
 Now we can configure the pins we're going to use.
-We use GPIO 16 for the red LED, GPIO 20 for the yellow LED and GPIO 21 for the green LED.
-This means we have to create three different Gpio objects with their respective GPIO numbers.
-The second parameter of the constructor indicates, if the pin should be used as an 'in' or 'out' pin.
-We only tell the LEDs to turn on and off, so we can just use 'out' as the second parameter.
+We use GPIO 16 (physical pin 36) for the red LED, GPIO 20 (physical pint 38) for the yellow LED and GPIO 21 
+(physical pin 40) for the green LED.
+
+This means all three pins have to be configured as output pins.
+We only tell the LEDs to turn on and off, so we can just use `rpio.OUTPUT` as the second parameter and have 
+`rpio.LOW` as the default state as the third parameter.
 ```typescript
-const RED = new Gpio(16, 'out');
-const YELLOW = new Gpio(20, 'out');
-const GREEN = new Gpio(21, 'out');
-const LEDs = [RED, YELLOW, GREEN];
+const PIN_RED = 36;
+const PIN_YELLOW = 38;
+const PIN_GREEN = 40;
+
+rpio.open(PIN_RED, rpio.OUTPUT, rpio.LOW);
+rpio.open(PIN_YELLOW, rpio.OUTPUT, rpio.LOW);
+rpio.open(PIN_GREEN, rpio.OUTPUT, rpio.LOW);
 ```
 Before the program starts, all three LEDs are off.
 By using timeouts, we can define when each of the LEDs will be turned on.
@@ -99,23 +104,18 @@ First we want the red LED to be turned on, followed by the yellow and the green 
 Each LED should be turned on in a sequence of about 2 seconds.
 The code will then look like this
 ```typescript
-setTimeout(() => RED.writeSync(Gpio.HIGH), 0);
-setTimeout(() => YELLOW.writeSync(Gpio.HIGH), 2000);
-setTimeout(() => GREEN.writeSync(Gpio.HIGH), 4000);
+setTimeout(() => rpio.write(PIN_RED, rpio.HIGH), 0);
+setTimeout(() => rpio.write(PIN_YELLOW, rpio.HIGH), 2000);
+setTimeout(() => rpio.write(PIN_GREEN, rpio.HIGH), 4000);
 ```
 
 The last part we have to do is freeing all resources.
-```typescript
-function freePin(pin: Gpio): void {
-    // Turn the pin off
-    pin.writeSync(Gpio.LOW);
-    // Free resources
-    pin.unexport();
-}
-```
 This can be done with an iteration over the LED array.
 The cleanup code must run after we have completed all steps and just need to clean up before the program finishes.
 For this we can use another timeout.
+```typescript
+setTimeout(() => LEDs.forEach(LED => rpio.close(LED)), 6000);
+```
 
 As a reference, the full code can be found in the [index.ts](./src/index.ts) file.
 

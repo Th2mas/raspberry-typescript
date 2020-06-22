@@ -1,24 +1,29 @@
-import {Gpio} from 'onoff';
-
-const RED = new Gpio(16, 'out');
-const YELLOW = new Gpio(20, 'out');
-const GREEN = new Gpio(21, 'out');
-const LEDs = [RED, YELLOW, GREEN];
+import * as rpio from 'rpio';
 
 /**
- * Turns the given pin off and frees the resources
- * @param pin the pin to be freed
+ * We want to use GPIO 16, which has the physical pin 36
  */
-function freePin(pin: Gpio): void {
-    // Turn the pin off
-    pin.writeSync(Gpio.LOW);
-    // Free resources
-    pin.unexport();
-}
+const PIN_RED = 36;
 
-setTimeout(() => RED.writeSync(Gpio.HIGH), 0);
-setTimeout(() => YELLOW.writeSync(Gpio.HIGH), 2000);
-setTimeout(() => GREEN.writeSync(Gpio.HIGH), 4000);
+/**
+ * We want to use GPIO 20, which has the physical pin 38
+ */
+const PIN_YELLOW = 38;
+
+/**
+ * We want to use GPIO 21, which has the physical pin 40
+ */
+const PIN_GREEN = 40;
+
+const LEDs = [PIN_RED, PIN_YELLOW, PIN_GREEN];
+
+rpio.open(PIN_RED, rpio.OUTPUT, rpio.LOW);
+rpio.open(PIN_YELLOW, rpio.OUTPUT, rpio.LOW);
+rpio.open(PIN_GREEN, rpio.OUTPUT, rpio.LOW);
+
+setTimeout(() => rpio.write(PIN_RED, rpio.HIGH), 0);
+setTimeout(() => rpio.write(PIN_YELLOW, rpio.HIGH), 2000);
+setTimeout(() => rpio.write(PIN_GREEN, rpio.HIGH), 4000);
 
 // Free all LED pins
-setTimeout(() => LEDs.forEach(LED => freePin(LED)), 6000);
+setTimeout(() => LEDs.forEach(LED => rpio.close(LED)), 6000);
