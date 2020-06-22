@@ -54,10 +54,12 @@ Open the console in the directory in which you stored the package.json file on y
 
 To run the application, type
 ```shell script
-npm run start
+sudo npm run start
 ```
 in the console.
 After a short time you should be able to see the LEDs light up, starting from 0 (all LEDs off) up to 255 (all LEDs) on.
+For getting access to I2C, PWM, and SPI, we need root access and therefore we prepend `sudo` before our `npm run start` 
+command.
 
 ## Notes
 Coming soon
