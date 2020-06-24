@@ -27,7 +27,7 @@ number.
 
 ## Design
 
-![Fritzing diagram of the binary counterL example](./images/binary-counter.svg)
+![Fritzing diagram of the binary counter example](./images/binary-counter.svg)
 
 *Diagram created using [Fritzing](https://fritzing.org/home/)*
 
@@ -62,7 +62,53 @@ For getting access to I2C, PWM, and SPI, we need root access and therefore we pr
 command.
 
 ## Notes
+### Improve Design
+Instead of using 8 different resistors, it is possible to achieve the same result with a single resistor.
+Therefore, the number of necessary elements can be reduced.
+
+Coming soon: Calculation (LED in parallel with a single resistor as output). 
+
+### Use GPB
+
+#### GPB Design
+Careful: Although the GPB bank is exactly on the opposite side of the GPA bank, the pin numbering is in reverse order.
+So across GPA0 is GPB7 and across GPA7 is GPB0. 
+You can find the full schematic in the datasheet.
+
 Coming soon
+
+#### GPB Code
+
+Although we didn't use the second bank the MCP23017 offers, it is possible to simultaneously also run the second bank.
+This means, that we get 16 additional GPIO ports with one port expander.
+It is relatively easy to use.
+If for example we want to duplicate the binary counter on the GPB bank, we have to modify the code slightly.
+First, we need to provide the address of the new bank.
+```typescript
+const IODIRB_ADDRESS = 0x01;
+const OLATB_ADDRESS = 0x15;
+```
+Second, we need to activate the second bank
+```typescript
+rpio.i2cWrite(Buffer.from([IODIRA_ADDRESS, IODIR_OUTPUT]));
+rpio.i2cWrite(Buffer.from([IODIRB_ADDRESS, IODIR_OUTPUT]));
+```
+When we now count inside the loop, we need to add the code for writing to the second bank.
+The full loop will looks like this
+```typescript
+for (let i = 0; i < 256; i++) {
+    console.log(`Counter at ${i}`);
+    rpio.i2cWrite(Buffer.from([OLATA_ADDRESS, i]));
+    rpio.i2cWrite(Buffer.from([OLATB_ADDRESS, i]));
+    rpio.sleep(1);
+}
+```
+When finishing the program, we must not forget to also reset the pins for the second bank.
+```typescript
+rpio.i2cWrite(Buffer.from([OLATB_ADDRESS, 0x00]));
+``` 
+
+As a reference, the full code can be found in the [index-gpb.ts](./src/index-gpb.ts) file.
 
 ## Further reading
 Coming soon
