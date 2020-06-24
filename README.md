@@ -13,3 +13,6 @@ A collection of projects, using TypeScript and NodeJS in combination with a Rasp
 1. [8-Bit Binary Counter](./binary-counter)
     - [16-Bit Binary Counter](./binary-counter/binary-counter-16-bit)
 2. [Tetris](./tetris)
+
+## Custom components
+1. [8x8 LED matrix](./led-matrix-8x8)

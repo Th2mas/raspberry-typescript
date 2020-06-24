@@ -20,10 +20,10 @@ Coming soon
 - 1x Battery holder for 2x AA batteries
 - 8x 10&Omega; resistors
 - 34x Male-to-male jumper wires
-  - 8x for SDA/SCL
-  - 8x for VDD and VSS
-  - 16x for A0-A2 and RESET
-  - 2x for convenience (connecting left and right side)
+    - 8x for SDA/SCL
+    - 8x for VDD and VSS
+    - 16x for A0-A2 and RESET
+    - 2x for convenience (connecting left and right side)
 - 2x Female-to-male jumper wires
 
 ## Design
