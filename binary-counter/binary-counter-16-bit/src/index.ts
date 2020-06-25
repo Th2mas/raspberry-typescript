@@ -28,19 +28,22 @@ console.log('Start counting');
 /*
 // With two loops
 let counter = 0;
-for (let i = 0; i < 256; i++) {
+const limit = Math.pow(2, 8);   // = 256
+for (let i = 0; i < limit; i++) {
     rpio.i2cWrite(Buffer.from([OLATB_ADDRESS, i]));
-    for (let j = 0; j < 256; j++) {
+    for (let j = 0; j < limit; j++) {
         console.log(`Counter at ${++counter}`);
         rpio.i2cWrite(Buffer.from([OLATA_ADDRESS, j]));
         rpio.msleep(50);
     }
 }
  */
-for (let i = 0; i < 65536; i++) {
+// With one loop and shifting
+const limit = Math.pow(2, 16);  // = 65536
+for (let i = 0; i < limit; i++) {
     console.log(`Counter at ${i}`);
-    rpio.i2cWrite(Buffer.from([OLATA_ADDRESS, i & 0x00FF]));
-    rpio.i2cWrite(Buffer.from([OLATB_ADDRESS, (i & 0xFF00) >> 8]));
+    rpio.i2cWrite(Buffer.from([OLATA_ADDRESS, i & 0x00FF]));        // Only get the LSB
+    rpio.i2cWrite(Buffer.from([OLATB_ADDRESS, (i & 0xFF00) >> 8])); // Only get the MSB -> shift to map to 0-256
     rpio.msleep(50);
 }
 
