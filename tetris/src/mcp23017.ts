@@ -1,3 +1,5 @@
+import * as rpio from 'rpio';
+
 /**
  * An MCP23017 can have 2^3=8 different addresses, since it has three address pins, A0, A1, and A2, with a base address
  * of 0x20
@@ -20,6 +22,7 @@
  * A MCP23017 has two banks, GPA and GPB, with 8 configurable GPIO pins each
  * This means, that one MCP23017 can serve up to 16 additional GPIO pins
  */
+
 enum MCP23017 {
     ADDR_0 = 0x20,
     ADDR_1,
@@ -29,6 +32,17 @@ enum MCP23017 {
     ADDR_5,
     ADDR_6,
     ADDR_7
+}
+
+enum GP {
+    _0 = 0x01,
+    _1 = 0x02,
+    _2 = 0x04,
+    _3 = 0x08,
+    _4 = 0x10,
+    _5 = 0x20,
+    _6 = 0x40,
+    _7 = 0x80
 }
 
 /**
@@ -47,4 +61,12 @@ enum IODIR {
     B = 0x01    // GPB
 }
 
-export {MCP23017, IODIR, OLAT};
+function activateMCP23017(address: MCP23017): void {
+    rpio.i2cSetSlaveAddress(address);   // TODO: Maybe remove this and just use the slave address in the i2cWrite command?
+    // Activate the pins at GPA and GPB
+    // 0x00 as the second parameter configures the bank to serve as an output
+    rpio.i2cWrite(Buffer.from([IODIR.A, 0x00]));
+    rpio.i2cWrite(Buffer.from([IODIR.B, 0x00]));
+}
+
+export {MCP23017, IODIR, OLAT, activateMCP23017};

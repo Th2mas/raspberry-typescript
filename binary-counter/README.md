@@ -33,7 +33,8 @@ number.
 
 *Diagram created using [Fritzing](https://fritzing.org/home/)*
 
-E.g. if the number is 1100100<sub>2</sub> (100<sub>10</sub>), the first, second and fifth LED (from top to bottom) should be on, while the others are off.
+E.g. if the number is 1100100<sub>2</sub> (100<sub>10</sub>), the first, second and fifth LED (from bottom to top) 
+should be on, while the others are off.
 
 ## Circuit Diagram
 

@@ -46,7 +46,7 @@ The packages needed in this project are
 As a reference, the full can be found in the [package.json](./package.json) file.
 
 ## Code
-The code is pretty similar to the [index-gpb.ts](../src/index-gpb.ts) code.
+The code is pretty similar to the [index-gpb.ts](../src/index-gpb.ts) code of the [8-bit binary counter](..) project.
 The only thing we have to change is the loop.
 
 We want to extend this by another loop. As soon as the GPA counter (least significant bits) has finished, we want to 
@@ -111,3 +111,4 @@ for (let i = 0; i < 65536; i++) {
 ## Further reading
 Another example of using the MCP23017 is concatenating more than one port expander and make use of all additional GPIO 
 ports. This is shown in the [Tetris](../../tetris) project.
+Or take a look at the simpler [8-bit binary counter](..) project.

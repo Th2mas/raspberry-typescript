@@ -6,7 +6,6 @@ Coming soon
 2. [Design](#design)
 3. [Circuit Diagram](#circuit-diagram)
 4. [Usage](#usage)
-5. [Further reading](#further-reading)
 
 ## Components
 - 1x Perfboard (at least 16x16)
@@ -25,7 +24,4 @@ Coming soon
 Coming soon
 
 ## Usage
-Coming soon
-
-## Further reading
 Coming soon
