@@ -10,6 +10,8 @@ const OLATA_ADDRESS = 0x14;
 
 const IODIR_OUTPUT = 0x00;
 
+addExitHandler();
+
 // Start i2c
 rpio.i2cBegin();
 
@@ -29,5 +31,13 @@ console.log('Stop counting');
 
 rpio.i2cWrite(Buffer.from([OLATA_ADDRESS, 0x00]));
 
-// After the counting is done, we need free the i2c interface
-rpio.i2cEnd();
+function addExitHandler(): void {
+    // Start reading from stdin so we don't exit
+    process.stdin.resume();
+    process.on('SIGINT', () => process.exit(0));
+    process.on('exit', () => {
+        // After everything is done, we need to free the i2c interface
+        rpio.i2cEnd();
+        console.log('\nClosing the application');
+    })
+}

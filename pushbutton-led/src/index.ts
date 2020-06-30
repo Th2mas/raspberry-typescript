@@ -4,14 +4,16 @@ const LED = 38;     // GPIO 20, physical pin: 38
 const BUTTON = 40;  // GPIO 21, physical pin: 40
 const PINS = [BUTTON, LED];
 
-rpio.open(LED, rpio.OUTPUT, rpio.LOW);
-rpio.open(BUTTON, rpio.INPUT, rpio.PULL_UP);
-
-rpio.poll(BUTTON, pollCallback);
-
+activatePins();
 addExitHandler();
 
 console.log('You can start pressing now!');
+
+function activatePins(): void {
+    rpio.open(LED, rpio.OUTPUT, rpio.LOW);
+    rpio.open(BUTTON, rpio.INPUT, rpio.PULL_UP);
+    rpio.poll(BUTTON, pollCallback);
+}
 
 function pollCallback(pin: number): void {
     if (isValidPush(pin)) {

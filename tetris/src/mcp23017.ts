@@ -62,11 +62,10 @@ enum IODIR {
 }
 
 function activateMCP23017(address: MCP23017): void {
-    rpio.i2cSetSlaveAddress(address);   // TODO: Maybe remove this and just use the slave address in the i2cWrite command?
     // Activate the pins at GPA and GPB
     // 0x00 as the second parameter configures the bank to serve as an output
-    rpio.i2cWrite(Buffer.from([IODIR.A, 0x00]));
-    rpio.i2cWrite(Buffer.from([IODIR.B, 0x00]));
+    rpio.i2cWrite(Buffer.from([address, IODIR.A, 0x00]));
+    rpio.i2cWrite(Buffer.from([address, IODIR.B, 0x00]));
 }
 
-export {MCP23017, IODIR, OLAT, activateMCP23017};
+export {MCP23017, activateMCP23017};
