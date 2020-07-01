@@ -1,25 +1,13 @@
 import * as rpio from 'rpio';
 import {activateControlButtons, deactivateControlButtons} from "./controls";
 
-// Create the 8x8 matrix, which will store the on/off state of the LEDs (default 0)
-// Instead of having a two-dimensional array, we will only create one array, which stores hexadecimal values
-// (from 0x00 to 0xFF each)
-// const matrix: Array<number> = [];
+
 
 // const addressesMCP23017 = [MCP23017.ADDR_0, MCP23017.ADDR_1, MCP23017.ADDR_2, MCP23017.ADDR_3];
 
 init();
 
-let hasGameEnded = false;
 console.log('Game started');
-/*
-while (!hasGameEnded) {
-    // TODO: Write the game loop
-}
- */
-console.log('Game ended');
-
-// cleanup();
 
 function init(): void {
     // We need to start and stop i2c
@@ -54,7 +42,7 @@ function cleanup(): void {
     // When everything is done, we need to close the i2c connection
     rpio.i2cEnd();
 
-    console.log('Finish cleanup');
+    console.log('\nFinish cleanup');
 }
 
 // Notes: To fix seg fault and crashes -> https://www.npmjs.com/package/rpio#disable-gpio-interrupts
