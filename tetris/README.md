@@ -12,19 +12,7 @@ Coming soon
 8. [Further reading](#further-reading)
 
 ## Components
-- 1x Raspberry Pi 3
-- 1x [8x8 LED matrix](../led-matrix-8x8)
-- 4x MCP23017 Port Expander
-- 2x Breadboards
-- 2x AA batteries
-- 1x Battery holder for 2x AA batteries
-- 8x 10&Omega; resistors
-- 34x Male-to-male jumper wires
-    - 8x for SDA/SCL
-    - 8x for VDD and VSS
-    - 16x for A0-A2 and RESET
-    - 2x for convenience (connecting left and right side)
-- 2x Female-to-male jumper wires
+Coming soon
 
 ## Design
 
@@ -44,7 +32,6 @@ The packages needed in this project are
 - [ts-node](https://www.npmjs.com/package/ts-node)
 
 As a reference, the full can be found in the [package.json](./package.json) file.
-
 
 ## Code
 Coming soon

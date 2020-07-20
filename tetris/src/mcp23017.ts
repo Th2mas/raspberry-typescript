@@ -1,4 +1,4 @@
-import * as rpio from 'rpio';
+import * as i2cBus from 'i2c-bus';
 
 /**
  * An MCP23017 can have 2^3=8 different addresses, since it has three address pins, A0, A1, and A2, with a base address
@@ -34,7 +34,7 @@ enum MCP23017 {
     ADDR_7
 }
 
-enum GP {
+enum LED {
     _0 = 0x01,
     _1 = 0x02,
     _2 = 0x04,
@@ -61,11 +61,124 @@ enum IODIR {
     B = 0x01    // GPB
 }
 
-function activateMCP23017(address: MCP23017): void {
-    // Activate the pins at GPA and GPB
-    // 0x00 as the second parameter configures the bank to serve as an output
-    rpio.i2cWrite(Buffer.from([address, IODIR.A, 0x00]));
-    rpio.i2cWrite(Buffer.from([address, IODIR.B, 0x00]));
+let i2c: i2cBus.PromisifiedBus;
+let buffer: Buffer;
+
+async function open(): Promise<void> {
+    try {
+        i2c = await i2cBus.openPromisified(1);
+    } catch (e) {
+        console.info('Error in open');
+        console.error(e);
+    }
 }
 
-export {MCP23017, activateMCP23017};
+async function activateAll(): Promise<void> {
+    console.info('Activating MCP23017');
+
+    try {
+        let key;
+        key = MCP23017.ADDR_0;
+
+        buffer = Buffer.from([IODIR.A, 0x00]);
+        await i2c.i2cWrite(key, buffer.length, buffer);
+
+        buffer = Buffer.from([IODIR.B, 0x00]);
+        await i2c.i2cWrite(key, buffer.length, buffer);
+
+        key = MCP23017.ADDR_1;
+
+        buffer = Buffer.from([IODIR.A, 0x00]);
+        await i2c.i2cWrite(key, buffer.length, buffer);
+
+        buffer = Buffer.from([IODIR.B, 0x00]);
+        await i2c.i2cWrite(key, buffer.length, buffer);
+
+        key = MCP23017.ADDR_2;
+
+        buffer = Buffer.from([IODIR.A, 0x00]);
+        await i2c.i2cWrite(key, buffer.length, buffer);
+
+        buffer = Buffer.from([IODIR.B, 0x00]);
+        await i2c.i2cWrite(key, buffer.length, buffer);
+
+        key = MCP23017.ADDR_3;
+
+        buffer = Buffer.from([IODIR.A, 0x00]);
+        await i2c.i2cWrite(key, buffer.length, buffer);
+
+        buffer = Buffer.from([IODIR.B, 0x00]);
+        await i2c.i2cWrite(key, buffer.length, buffer);
+    } catch (e) {
+        console.info('Error in activateAll');
+        console.error(e);
+    }
+}
+
+async function deactivateAll(): Promise<void> {
+    console.info('\nDeactivating MCP23017');
+    for (let i = 0; i < 8; i++) {
+        try {
+            await writeLedArray(i, []);
+        } catch (e) {
+            console.info('Error in deactivateAll');
+            console.error(e);
+        }
+    }
+}
+
+async function writeLedArray(row: number, leds: Array<LED>): Promise<void> {
+    const result = leds.reduce((acc, curr) => acc | curr, 0);
+
+    try {
+        await writeLedNumber(row, result);
+    } catch (e) {
+        console.info('Error in writeLedArray');
+        console.error(e);
+    }
+}
+
+async function writeLedNumber(row: number, leds: number): Promise<void> {
+    let MCP;
+    switch (row) {
+        case 0:
+        case 1:
+            MCP = MCP23017.ADDR_0;
+            break;
+        case 2:
+        case 3:
+            MCP = MCP23017.ADDR_1;
+            break;
+        case 4:
+        case 5:
+            MCP = MCP23017.ADDR_2;
+            break;
+        case 6:
+        case 7:
+            MCP = MCP23017.ADDR_3;
+            break;
+        default:
+            throw Error(`Row ${row} not supported`);
+    }
+    const bank = row % 2 === 0 ? OLAT.A : OLAT.B;
+
+    buffer = Buffer.from([bank, leds]);
+
+    try {
+        await i2c.i2cWrite(MCP, buffer.length, buffer);
+    } catch (e) {
+        console.info('Error in writeLedNumber');
+        console.error(e);
+    }
+}
+
+async function close(): Promise<void> {
+    try {
+        await i2c.close();
+    } catch (e) {
+        console.info('Error in close');
+        console.error(e);
+    }
+}
+
+export {LED, open, close, activateAll, deactivateAll, writeLedNumber, writeLedArray};

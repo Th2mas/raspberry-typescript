@@ -1,4 +1,5 @@
-import {PolyominoRotationJSON} from "../polyomino";
+import {PolyominoRotationJSON} from '../polyomino';
+import {LED} from '../../mcp23017';
 
 /**
  * Remember:
@@ -9,10 +10,10 @@ import {PolyominoRotationJSON} from "../polyomino";
  * LED2: Index 2, 2^2 -> 4 = 0x4
  * LED3: Index 3, 2^2 -> 8 = 0x8
  */
-const LED0 = 0x1;
-const LED1 = 0x2;
-const LED2 = 0x4;
-const LED3 = 0x8;
+const LED0 = LED._0;
+const LED1 = LED._1;
+const LED2 = LED._2;
+const LED3 = LED._3;
 
 /**
  * This object holds all possible tetromino blocks and their rotation values
