@@ -27,11 +27,7 @@ enum MCP23017 {
     ADDR_0 = 0x20,
     ADDR_1,
     ADDR_2,
-    ADDR_3,
-    ADDR_4,
-    ADDR_5,
-    ADDR_6,
-    ADDR_7
+    ADDR_3
 }
 
 enum LED {
@@ -76,39 +72,18 @@ async function open(): Promise<void> {
 async function activateAll(): Promise<void> {
     console.info('Activating MCP23017');
 
+    const values = Object.values(MCP23017)
+        .map(value => Number(value))
+        .filter(value => !isNaN(value));
+
     try {
-        let key;
-        key = MCP23017.ADDR_0;
+        for (const value of values) {
+            buffer = Buffer.from([IODIR.A, 0x00]);
+            await i2c.i2cWrite(value, buffer.length, buffer);
 
-        buffer = Buffer.from([IODIR.A, 0x00]);
-        await i2c.i2cWrite(key, buffer.length, buffer);
-
-        buffer = Buffer.from([IODIR.B, 0x00]);
-        await i2c.i2cWrite(key, buffer.length, buffer);
-
-        key = MCP23017.ADDR_1;
-
-        buffer = Buffer.from([IODIR.A, 0x00]);
-        await i2c.i2cWrite(key, buffer.length, buffer);
-
-        buffer = Buffer.from([IODIR.B, 0x00]);
-        await i2c.i2cWrite(key, buffer.length, buffer);
-
-        key = MCP23017.ADDR_2;
-
-        buffer = Buffer.from([IODIR.A, 0x00]);
-        await i2c.i2cWrite(key, buffer.length, buffer);
-
-        buffer = Buffer.from([IODIR.B, 0x00]);
-        await i2c.i2cWrite(key, buffer.length, buffer);
-
-        key = MCP23017.ADDR_3;
-
-        buffer = Buffer.from([IODIR.A, 0x00]);
-        await i2c.i2cWrite(key, buffer.length, buffer);
-
-        buffer = Buffer.from([IODIR.B, 0x00]);
-        await i2c.i2cWrite(key, buffer.length, buffer);
+            buffer = Buffer.from([IODIR.B, 0x00]);
+            await i2c.i2cWrite(value, buffer.length, buffer);
+        }
     } catch (e) {
         console.info('Error in activateAll');
         console.error(e);
