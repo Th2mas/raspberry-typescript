@@ -1,6 +1,6 @@
 import {Polyomino} from './blocks/polyomino';
 import {TETROMINO_DEFINITION} from './blocks/definitions/tetromino.definition';
-import {writeLedNumber} from './mcp23017';
+import {resetAll, writeLedNumber} from './mcp23017';
 
 export class Game {
 
@@ -15,6 +15,7 @@ export class Game {
      * (from 0x00 to 0xFF each)
      */
     private matrix: Array<number>;
+    private positionMatrix: Array<number>;
 
     /**
      * A counter for keeping up how many points the player has
@@ -28,8 +29,8 @@ export class Game {
 
     constructor() {
         this.newGame();
-        this.startGame()
-            .then(() => console.log('Game started'));
+        this.startGame();
+        console.log('Game started');
     }
 
     /**
@@ -37,23 +38,66 @@ export class Game {
      */
     private newGame() {
         this.matrix = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+        this.positionMatrix = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
         this.points = 0;
 
         // The Tetromino_Definition is the default one. We can change it later, so that we can decide which ones we want
         // to use
         this.polyomino = new Polyomino(TETROMINO_DEFINITION);
+        const position = this.polyomino.getPosition();
+        for (let row = 0; row < position.length; row++) {
+            this.positionMatrix[row] = position[row];
+        }
     }
 
-    private async startGame() {
-        try {
-            const position = this.polyomino.getPosition();
-            for (const index in position) {
-                const i = Number(index);
-                await writeLedNumber(i, position[i]);
+    private startGame() {
+        setInterval(async () => {
+            try {
+                await resetAll();
+
+                for (let row = 0; row < this.matrix.length; row++) {
+                    await writeLedNumber(row, this.matrix[row] | this.positionMatrix[row]);
+                }
+
+                this.moveRight();
+
+                this.incrementPoints();
+            } catch (e) {
+                console.error(e);
             }
-        } catch (e) {
-            console.error(e);
+        }, Game.DEFAULT_MOVING_TIME);
+    }
+
+    private moveRight(): void {
+        this.move(num => num << 1, num => num < 0xFF);
+    }
+
+    private moveLeft(): void {
+        this.move(num => num >> 1, num => num > 0x00);
+    }
+
+    private move(shift: (num: number) => number, checkValue: (num: number) => boolean): void {
+        let shiftedValue: number;
+        let oldMatrix = [...this.positionMatrix];
+
+        for (let row = 0; row < this.positionMatrix.length; row++) {
+            shiftedValue = shift(this.positionMatrix[row]);
+            if (checkValue(shiftedValue)) {
+                this.positionMatrix[row] = shiftedValue;
+            }
         }
+
+        if (this.isOverlapping()) {
+            this.positionMatrix = oldMatrix;
+        }
+    }
+
+    private isOverlapping(): boolean {
+        let bool = false;
+        for (let row = 0; row < this.matrix.length; row++) {
+            bool = bool || (this.matrix[row] & this.positionMatrix[row]) !== 0;
+        }
+        return bool;
     }
 
     /**
@@ -62,5 +106,9 @@ export class Game {
      */
     private incrementPoints(factor = 1): void {
         this.points += factor * Game.DEFAULT_MOVING_TIME;
+    }
+
+    getPoints(): number {
+        return this.points;
     }
 }

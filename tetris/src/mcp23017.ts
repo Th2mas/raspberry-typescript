@@ -70,8 +70,6 @@ async function open(): Promise<void> {
 }
 
 async function activateAll(): Promise<void> {
-    console.info('Activating MCP23017');
-
     const values = Object.values(MCP23017)
         .map(value => Number(value))
         .filter(value => !isNaN(value));
@@ -90,13 +88,12 @@ async function activateAll(): Promise<void> {
     }
 }
 
-async function deactivateAll(): Promise<void> {
-    console.info('\nDeactivating MCP23017');
+async function resetAll(): Promise<void> {
     for (let i = 0; i < 8; i++) {
         try {
             await writeLedArray(i, []);
         } catch (e) {
-            console.info('Error in deactivateAll');
+            console.info('Error in resetAll');
             console.error(e);
         }
     }
@@ -156,4 +153,4 @@ async function close(): Promise<void> {
     }
 }
 
-export {LED, open, close, activateAll, deactivateAll, writeLedNumber, writeLedArray};
+export {LED, open, close, activateAll, resetAll, writeLedNumber, writeLedArray};

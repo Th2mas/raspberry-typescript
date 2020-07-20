@@ -32,12 +32,16 @@ export class Polyomino {
      * Stores the current block object
      * It contains values of which LEDs are on for all possible rotations
      */
-    private readonly block: PolyominoRotationJSON;
+    private block: PolyominoRotationJSON;
 
     /**
      * Creates a new basic Polyomino object
      */
     constructor(private formDefinition: Array<PolyominoRotationJSON>) {
+        this.initialise();
+    }
+
+    initialise(): void {
         this.block = this.getRandomForm();
         this.currentRotation = this.getRandomRotation();
         this.currentPosition = this.getPosition();
@@ -47,7 +51,7 @@ export class Polyomino {
      * Returns a random for of the 'formDefinition' array
      */
     private getRandomForm(): PolyominoRotationJSON {
-        const randomIndex = Math.floor(Math.random() * this.formDefinition.length)
+        const randomIndex = Math.floor(Math.random() * this.formDefinition.length);
         return this.formDefinition[randomIndex];
     }
 

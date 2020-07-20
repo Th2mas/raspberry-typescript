@@ -1,5 +1,5 @@
 import {Game} from './game';
-import {activateAll, close, deactivateAll, open} from './mcp23017';
+import {activateAll, close, resetAll, open} from './mcp23017';
 
 init()
     .then(() => console.log('Finish init'));
@@ -24,12 +24,12 @@ function addExitHandler(): void {
     process.stdin.resume();
     process.on('SIGINT', async () => {
         try {
-            await deactivateAll();
+            await resetAll();
             await close();
         } catch (e) {
             console.error(e);
         }
-        console.info('Closing the application');
+        console.info('\nClosing the application');
         process.exit(0);
     });
     console.log('Added Exit handler');
