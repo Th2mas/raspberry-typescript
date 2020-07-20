@@ -93,11 +93,8 @@ export class Game {
     }
 
     private isOverlapping(): boolean {
-        let bool = false;
-        for (let row = 0; row < this.matrix.length; row++) {
-            bool = bool || (this.matrix[row] & this.positionMatrix[row]) !== 0;
-        }
-        return bool;
+        return this.matrix
+            .some((value, index) => (value & this.positionMatrix[index]) !== 0);
     }
 
     /**
