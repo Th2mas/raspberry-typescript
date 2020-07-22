@@ -45,9 +45,7 @@ export class Game {
         // to use
         this.polyomino = new Polyomino(TETROMINO_DEFINITION);
         const position = this.polyomino.getPosition();
-        for (let row = 0; row < position.length; row++) {
-            this.positionMatrix[row] = position[row];
-        }
+        position.forEach((val, idx) => this.positionMatrix[idx] = val);
     }
 
     private startGame() {
@@ -59,42 +57,93 @@ export class Game {
                     await writeLedNumber(row, this.matrix[row] | this.positionMatrix[row]);
                 }
 
-                this.moveRight();
+                if (this.isAbleToMoveDown()) {
+                    this.moveDown();
+                } else {
+                    Math.random() > 0.5 ? this.moveRight() : this.moveLeft();
+                }
 
                 this.incrementPoints();
             } catch (e) {
                 console.error(e);
             }
-        }, Game.DEFAULT_MOVING_TIME);
+        }, Game.DEFAULT_MOVING_TIME / 2);
     }
 
     private moveRight(): void {
-        this.move(num => num << 1, num => num < 0xFF);
+        this.move(num => num << 1, num => num);
     }
 
     private moveLeft(): void {
-        this.move(num => num >> 1, num => num > 0x00);
+        this.move(num => num >> 1, num => ~(num - 1) & 0xFF);  // Invert the bits for a simpler check, result should be < 255
     }
 
-    private move(shift: (num: number) => number, checkValue: (num: number) => boolean): void {
-        let shiftedValue: number;
+    private move(shift: (num: number) => number, checkValue: (num: number) => number): void {
         let oldMatrix = [...this.positionMatrix];
+        let isValidShift = true;
 
-        for (let row = 0; row < this.positionMatrix.length; row++) {
-            shiftedValue = shift(this.positionMatrix[row]);
-            if (checkValue(shiftedValue)) {
-                this.positionMatrix[row] = shiftedValue;
-            }
-        }
+        this.getNonZeroIndices()
+            .forEach(idx => {
+                const shiftedValue = shift(this.positionMatrix[idx]);
+                isValidShift = isValidShift && (checkValue(shiftedValue) < 0xFF);
+                if (isValidShift) {
+                    this.positionMatrix[idx] = shiftedValue;
+                }
+            });
 
-        if (this.isOverlapping()) {
+        if (this.isOverlapping() || !isValidShift) {
             this.positionMatrix = oldMatrix;
         }
     }
 
     private isOverlapping(): boolean {
-        return this.matrix
-            .some((value, index) => (value & this.positionMatrix[index]) !== 0);
+        return this.matrix.some((value, index) => (value & this.positionMatrix[index]) !== 0);
+    }
+
+    private moveDown(): boolean {
+
+        // Check, if we are already in the lowest row
+        if (!this.isAbleToMoveDown()) {
+            this.saveCurrentPosition();
+            return;
+        }
+
+        const indexOfLowestBlocksRow = this.getIndexOfLowestBlocksRow();
+
+        // Check, if the current polyomino position is overlapping with the next row of the tetris matrix
+        if ((this.positionMatrix[indexOfLowestBlocksRow] & this.matrix[indexOfLowestBlocksRow + 1]) === 0) {
+            // Move the polyomino one row down, if the blocks are not overlapping
+            this.positionMatrix.unshift(0x00);
+            this.positionMatrix.pop();
+        } else {
+            this.saveCurrentPosition();
+        }
+    }
+
+    private saveCurrentPosition(): void {
+        this.getNonZeroIndices()
+            .forEach(idx => this.matrix[idx] = this.matrix[idx] | this.positionMatrix[idx]); // Save the position
+    }
+
+    private getNonZeroIndices(): Array<number> {
+        return this.positionMatrix
+            .map((val, idx) => val !== 0 ? idx : -1)    // Get only the indices, where the value is not 0x00
+            .filter(val => val !== -1);                                 // Filter out redundant indices
+    }
+
+    /**
+     * Checks, if the current polyomino is able to move one row down
+     */
+    private isAbleToMoveDown(): boolean {
+        return this.getIndexOfLowestBlocksRow() !== this.matrix.length;
+    }
+
+    /**
+     * Finds the index of the lowest blocks in the current polyomino position
+     * @return the index of the lowest blocks
+     */
+    private getIndexOfLowestBlocksRow(): number {
+        return this.positionMatrix.length - [...this.positionMatrix].reverse().findIndex(num => num !== 0);
     }
 
     /**
@@ -103,9 +152,5 @@ export class Game {
      */
     private incrementPoints(factor = 1): void {
         this.points += factor * Game.DEFAULT_MOVING_TIME;
-    }
-
-    getPoints(): number {
-        return this.points;
     }
 }
