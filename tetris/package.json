@@ -12,6 +12,7 @@
   "dependencies": {
     "i2c-bus": "^5.2.0",
     "rpio": "^2.1.1",
+    "rxjs": "^6.5.4",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.5"
   },

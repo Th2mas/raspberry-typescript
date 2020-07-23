@@ -1,6 +1,7 @@
 import {Polyomino, PolyominoRotationJSON} from './blocks/polyomino';
 import {TETROMINO_DEFINITION} from './blocks/definitions/tetromino.definition';
 import {resetAll, writeLedNumber} from './mcp23017';
+import {activateControlButtons, deactivateControlButtons, moveLeft$, moveRight$, rotateLeft$, rotateRight$} from './controls';
 
 export class Game {
 
@@ -10,9 +11,9 @@ export class Game {
     private static DEFAULT_MOVING_TIME = 1000;
 
     /**
-     * The number at which the speed gets incremented
+     * The number of saved blocks at which the speed gets incremented
      */
-    private static NUMBER_OF_STEPS = 15;
+    private static NUMBER_OF_STEPS = 5;
 
     /**
      * The 8x8 matrix, which will store the on/off state of the LEDs (default 0)
@@ -34,10 +35,20 @@ export class Game {
 
     private readonly definition: PolyominoRotationJSON[];
     private movementSpeed: number;
+    private savedBlocks: number;
+
+    private subscriptions = [];
 
     constructor() {
         this.definition = TETROMINO_DEFINITION;
-        this.movementSpeed = Game.DEFAULT_MOVING_TIME;
+
+        activateControlButtons();
+        this.subscriptions.push(
+            moveLeft$.subscribe(async () => await this.moveLeft()),
+            moveRight$.subscribe(async () => await this.moveRight()),
+            rotateLeft$.subscribe(async () => await this.rotateLeft()),
+            rotateRight$.subscribe(async () => await this.rotateRight())
+        );
 
         this.newGame();
         this.startGame();
@@ -48,6 +59,8 @@ export class Game {
      * Resets all values to default and starts a new game interval
      */
     private newGame() {
+        this.movementSpeed = Game.DEFAULT_MOVING_TIME;
+        this.savedBlocks = 0;
         this.matrix = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
         this.points = 0;
 
@@ -58,11 +71,7 @@ export class Game {
         (async () => {
             while (true) {
                 try {
-                    await resetAll();
-
-                    for (let row = 0; row < this.matrix.length; row++) {
-                        await writeLedNumber(row, this.matrix[row] | this.positionMatrix[row]);
-                    }
+                    await this.writeLEDS();
 
                     // Check, if we are already in the lowest row
                     if (this.isAbleToMoveDown()) {
@@ -70,9 +79,13 @@ export class Game {
                     } else {
                         if (this.hasReachedTop()) {
                             console.info(`Game over! Collected points: ${this.points}`);
+                            console.info('To close the game, press Ctrl+C');
+                            this.subscriptions.forEach(subscription => subscription.unsubscribe());
+                            deactivateControlButtons();
                             return;
                         }
                         this.saveCurrentPosition();
+                        this.updateMovementSpeed();
                         this.resetPolyomino();
                     }
 
@@ -82,7 +95,7 @@ export class Game {
                 }
 
                 // Determine how fast the blocks should move
-                await new Promise(res => setTimeout(res, this.getMovementSpeed()));
+                await new Promise(res => setTimeout(res, this.movementSpeed));
             }
         })();
     }
@@ -93,15 +106,15 @@ export class Game {
         this.polyomino.getPosition().forEach((val, idx) => this.positionMatrix[idx] = val);
     }
 
-    private moveRight(): void {
-        this.move(num => num << 1, num => num);
+    private async moveRight(): Promise<void> {
+        await this.move(num => num << 1, num => num);
     }
 
-    private moveLeft(): void {
-        this.move(num => num >> 1, num => ~(num - 1) & 0xFF);  // Invert the bits for a simpler check, result should be < 255
+    private async moveLeft(): Promise<void> {
+        await this.move(num => num >> 1, num => ~(num - 1) & 0xFF);  // Invert the bits for a simpler check, result should be < 255
     }
 
-    private move(shift: (num: number) => number, checkValue: (num: number) => number): void {
+    private async move(shift: (num: number) => number, checkValue: (num: number) => number): Promise<void> {
         let oldMatrix = [...this.positionMatrix];
         let isValidShift = true;
 
@@ -118,6 +131,16 @@ export class Game {
         // If we are overlapping with the save matrix or have performed a shift too much (i.e. we went outside the allowed range), restore
         if (this.isOverlapping() || !isValidShift) {
             this.positionMatrix = oldMatrix;
+        }
+
+        await this.writeLEDS();
+    }
+
+    private async writeLEDS(): Promise<void> {
+        await resetAll();
+
+        for (let row = 0; row < this.matrix.length; row++) {
+            await writeLedNumber(row, this.matrix[row] | this.positionMatrix[row]);
         }
     }
 
@@ -142,6 +165,7 @@ export class Game {
     private saveCurrentPosition(): void {
         this.getNonZeroIndices()
             .forEach(idx => this.matrix[idx] = this.matrix[idx] | this.positionMatrix[idx]); // Save the position
+        this.savedBlocks++;
     }
 
     /**
@@ -184,10 +208,23 @@ export class Game {
         return this.matrix.reduce((prev, curr) => prev && (curr !== 0), true);
     }
 
-    private getMovementSpeed(): number {
+    private updateMovementSpeed(): void {
         // The smaller the value, the faster the movement
-        this.movementSpeed *= this.points % (Game.NUMBER_OF_STEPS * Game.DEFAULT_MOVING_TIME) === 0 ? 0.5 : 1;
-        return this.movementSpeed;
+        this.movementSpeed *= this.savedBlocks % Game.NUMBER_OF_STEPS === 0 ? 0.5 : 1;
+    }
+
+    private async rotateLeft(): Promise<void> {
+        this.polyomino.rotateCounterClockWise();
+        // TODO: Rotation does not work yet
+        console.log('Rotate left');
+        await this.writeLEDS();
+    }
+
+    private async rotateRight(): Promise<void> {
+        this.polyomino.rotateClockWise();
+        // TODO: Rotation does not work yet
+        console.log('Rotate right');
+        await this.writeLEDS();
     }
 
     /**

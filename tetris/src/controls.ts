@@ -1,11 +1,24 @@
 import * as rpio from 'rpio';
+import {Subject} from 'rxjs';
 
 // Create four buttons - MOVE_LEFT, MOVE_RIGHT, ROTATE_LEFT, ROTATE_RIGHT
-const ROTATE_RIGHT_BUTTON = 31;    // GPIO 6, Physical pin 31
-const ROTATE_LEFT_BUTTON = 33;    // GPIO 13, Physical pin 33
-const MOVE_RIGHT_BUTTON = 35;    // GPIO 19, Physical pin 35
-const MOVE_LEFT_BUTTON = 37;    // GPIO 26, Physical pin 37
+const ROTATE_LEFT_BUTTON = 32;    // GPIO 12, Physical pin 32
+const ROTATE_RIGHT_BUTTON = 36;    // GPIO 16, Physical pin 36
+const MOVE_LEFT_BUTTON = 38;    // GPIO 20, Physical pin 38
+const MOVE_RIGHT_BUTTON = 40;    // GPIO 21, Physical pin 40
 const buttons = [MOVE_LEFT_BUTTON, MOVE_RIGHT_BUTTON, ROTATE_LEFT_BUTTON, ROTATE_RIGHT_BUTTON];
+
+const moveLeftSubject = new Subject<void>();
+const moveLeft$ = moveLeftSubject.asObservable();
+
+const moveRightSubject = new Subject<void>();
+const moveRight$ = moveRightSubject.asObservable();
+
+const rotateLeftSubject = new Subject<void>();
+const rotateLeft$ = rotateLeftSubject.asObservable();
+
+const rotateRightSubject = new Subject<void>();
+const rotateRight$ = rotateRightSubject.asObservable();
 
 /**
  * Opens the four button pins and assigns them a poll callback
@@ -31,10 +44,11 @@ function deactivateControlButtons(): void {
 /**
  * Lets the program know, that a move to the left occurred
  * @param pin the pin number of the button, which was pushed
+ *
  */
 function moveLeft(pin: number): void {
     if (isValidPush(pin)) {
-        console.log('Move left');
+        moveLeftSubject.next();
     }
 }
 
@@ -44,7 +58,7 @@ function moveLeft(pin: number): void {
  */
 function moveRight(pin: number): void {
     if (isValidPush(pin)) {
-        console.log('Move right');
+        moveRightSubject.next();
     }
 }
 
@@ -54,7 +68,7 @@ function moveRight(pin: number): void {
  */
 function rotateLeft(pin: number): void {
     if (isValidPush(pin)) {
-        console.log('Rotate left');
+        rotateLeftSubject.next();
     }
 }
 
@@ -64,7 +78,7 @@ function rotateLeft(pin: number): void {
  */
 function rotateRight(pin: number): void {
     if (isValidPush(pin)) {
-        console.log('Rotate right');
+        rotateRightSubject.next();
     }
 }
 
@@ -77,4 +91,4 @@ function isValidPush(pin: number): boolean {
     return rpio.read(pin) === rpio.LOW;
 }
 
-export {activateControlButtons, deactivateControlButtons};
+export {activateControlButtons, deactivateControlButtons, moveLeft$, moveRight$, rotateLeft$, rotateRight$};
