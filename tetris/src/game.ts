@@ -1,4 +1,4 @@
-import {Polyomino} from './blocks/polyomino';
+import {Polyomino, PolyominoRotationJSON} from './blocks/polyomino';
 import {TETROMINO_DEFINITION} from './blocks/definitions/tetromino.definition';
 import {resetAll, writeLedNumber} from './mcp23017';
 
@@ -8,6 +8,11 @@ export class Game {
      * The default interval time, telling how quickly a block moves
      */
     private static DEFAULT_MOVING_TIME = 1000;
+
+    /**
+     * The number at which the speed gets incremented
+     */
+    private static NUMBER_OF_STEPS = 15;
 
     /**
      * The 8x8 matrix, which will store the on/off state of the LEDs (default 0)
@@ -27,7 +32,13 @@ export class Game {
      */
     private polyomino: Polyomino;
 
+    private readonly definition: PolyominoRotationJSON[];
+    private movementSpeed: number;
+
     constructor() {
+        this.definition = TETROMINO_DEFINITION;
+        this.movementSpeed = Game.DEFAULT_MOVING_TIME;
+
         this.newGame();
         this.startGame();
         console.log('Game started');
@@ -38,36 +49,48 @@ export class Game {
      */
     private newGame() {
         this.matrix = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
-        this.positionMatrix = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
         this.points = 0;
 
-        // The Tetromino_Definition is the default one. We can change it later, so that we can decide which ones we want
-        // to use
-        this.polyomino = new Polyomino(TETROMINO_DEFINITION);
-        const position = this.polyomino.getPosition();
-        position.forEach((val, idx) => this.positionMatrix[idx] = val);
+        this.resetPolyomino();
     }
 
     private startGame() {
-        setInterval(async () => {
-            try {
-                await resetAll();
+        (async () => {
+            while (true) {
+                try {
+                    await resetAll();
 
-                for (let row = 0; row < this.matrix.length; row++) {
-                    await writeLedNumber(row, this.matrix[row] | this.positionMatrix[row]);
+                    for (let row = 0; row < this.matrix.length; row++) {
+                        await writeLedNumber(row, this.matrix[row] | this.positionMatrix[row]);
+                    }
+
+                    // Check, if we are already in the lowest row
+                    if (this.isAbleToMoveDown()) {
+                        this.moveDown();
+                    } else {
+                        if (this.hasReachedTop()) {
+                            console.info(`Game over! Collected points: ${this.points}`);
+                            return;
+                        }
+                        this.saveCurrentPosition();
+                        this.resetPolyomino();
+                    }
+
+                    this.incrementPoints();
+                } catch (e) {
+                    console.error(e);
                 }
 
-                if (this.isAbleToMoveDown()) {
-                    this.moveDown();
-                } else {
-                    Math.random() > 0.5 ? this.moveRight() : this.moveLeft();
-                }
-
-                this.incrementPoints();
-            } catch (e) {
-                console.error(e);
+                // Determine how fast the blocks should move
+                await new Promise(res => setTimeout(res, this.getMovementSpeed()));
             }
-        }, Game.DEFAULT_MOVING_TIME / 2);
+        })();
+    }
+
+    private resetPolyomino(): void {
+        this.polyomino = new Polyomino(this.definition);
+        this.positionMatrix = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+        this.polyomino.getPosition().forEach((val, idx) => this.positionMatrix[idx] = val);
     }
 
     private moveRight(): void {
@@ -82,6 +105,7 @@ export class Game {
         let oldMatrix = [...this.positionMatrix];
         let isValidShift = true;
 
+        // Shift the position only where it is really needed
         this.getNonZeroIndices()
             .forEach(idx => {
                 const shiftedValue = shift(this.positionMatrix[idx]);
@@ -91,40 +115,38 @@ export class Game {
                 }
             });
 
+        // If we are overlapping with the save matrix or have performed a shift too much (i.e. we went outside the allowed range), restore
         if (this.isOverlapping() || !isValidShift) {
             this.positionMatrix = oldMatrix;
         }
     }
 
+    /**
+     * Checks, if the current position of the polyomino is overlapping with the values inside the save matrix
+     */
     private isOverlapping(): boolean {
         return this.matrix.some((value, index) => (value & this.positionMatrix[index]) !== 0);
     }
 
-    private moveDown(): boolean {
-
-        // Check, if we are already in the lowest row
-        if (!this.isAbleToMoveDown()) {
-            this.saveCurrentPosition();
-            return;
-        }
-
-        const indexOfLowestBlocksRow = this.getIndexOfLowestBlocksRow();
-
-        // Check, if the current polyomino position is overlapping with the next row of the tetris matrix
-        if ((this.positionMatrix[indexOfLowestBlocksRow] & this.matrix[indexOfLowestBlocksRow + 1]) === 0) {
-            // Move the polyomino one row down, if the blocks are not overlapping
-            this.positionMatrix.unshift(0x00);
-            this.positionMatrix.pop();
-        } else {
-            this.saveCurrentPosition();
-        }
+    /**
+     * Moves the polyomino exactly one row down
+     */
+    private moveDown(): void {
+        this.positionMatrix.unshift(0x00);
+        this.positionMatrix.pop();
     }
 
+    /**
+     * Saves the current position of the position matrix in the save matrix
+     */
     private saveCurrentPosition(): void {
         this.getNonZeroIndices()
             .forEach(idx => this.matrix[idx] = this.matrix[idx] | this.positionMatrix[idx]); // Save the position
     }
 
+    /**
+     * Gets the indices of the position matrix, where the value is not 0 -> get the parts where the polyomino is stored
+     */
     private getNonZeroIndices(): Array<number> {
         return this.positionMatrix
             .map((val, idx) => val !== 0 ? idx : -1)    // Get only the indices, where the value is not 0x00
@@ -135,15 +157,37 @@ export class Game {
      * Checks, if the current polyomino is able to move one row down
      */
     private isAbleToMoveDown(): boolean {
-        return this.getIndexOfLowestBlocksRow() !== this.matrix.length;
+        const indexOfLowestBlocksRow = this.getIndexOfLowestBlocksRow();
+
+        // Checks, if there is still a row available to move down
+        const isNotOnTheLowestRow = indexOfLowestBlocksRow !== (this.matrix.length - 1);
+
+        // Check, if the current polyomino position is not overlapping with the next row of the tetris matrix
+        const isNotOverlappingWithNextRow = (this.positionMatrix[indexOfLowestBlocksRow] & this.matrix[indexOfLowestBlocksRow + 1]) === 0;
+
+        return isNotOnTheLowestRow && isNotOverlappingWithNextRow;
     }
 
     /**
      * Finds the index of the lowest blocks in the current polyomino position
+     * It requires, that the position matrix already has a polyomino inside
      * @return the index of the lowest blocks
      */
     private getIndexOfLowestBlocksRow(): number {
-        return this.positionMatrix.length - [...this.positionMatrix].reverse().findIndex(num => num !== 0);
+        return (this.positionMatrix.length - [...this.positionMatrix].reverse().findIndex(num => num !== 0)) - 1;
+    }
+
+    /**
+     * Checks, if the top was reached and therefore if the game is over
+     */
+    private hasReachedTop(): boolean {
+        return this.matrix.reduce((prev, curr) => prev && (curr !== 0), true);
+    }
+
+    private getMovementSpeed(): number {
+        // The smaller the value, the faster the movement
+        this.movementSpeed *= this.points % (Game.NUMBER_OF_STEPS * Game.DEFAULT_MOVING_TIME) === 0 ? 0.5 : 1;
+        return this.movementSpeed;
     }
 
     /**
