@@ -75,7 +75,9 @@ export class Game {
 
                     // Check, if we are already in the lowest row
                     if (this.isAbleToMoveDown()) {
-                        this.moveDown();
+                        // TODO: Something is still wrong with the move down method
+                        // Sometimes the LEDs still merge together, although they shouldn't. Maybe it's the isAbleToMoveDown method?
+                        Game.moveDown(this.positionMatrix);
                     } else {
                         if (this.hasReachedTop()) {
                             console.info(`Game over! Collected points: ${this.points}`);
@@ -154,9 +156,9 @@ export class Game {
     /**
      * Moves the polyomino exactly one row down
      */
-    private moveDown(): void {
-        this.positionMatrix.unshift(0x00);
-        this.positionMatrix.pop();
+    static moveDown(matrix: Array<number>): void {
+        matrix.unshift(0x00);
+        matrix.pop();
     }
 
     /**
