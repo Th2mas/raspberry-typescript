@@ -18,11 +18,6 @@ export interface PolyominoRotationJSON {
 export class Polyomino {
 
     /**
-     * Stores the hexadecimal values of which LEDs are currently on
-     */
-    private currentPosition: Array<number>;
-
-    /**
      * Stores the current rotation angle
      * Either 0°, 90°, 180° or 270° (as a string type)
      */
@@ -44,7 +39,6 @@ export class Polyomino {
     initialise(): void {
         this.block = this.getRandomForm();
         this.currentRotation = this.getRandomRotation();
-        this.currentPosition = this.getPosition();
     }
 
     /**
@@ -81,7 +75,7 @@ export class Polyomino {
     /**
      * Gets the LED positions defined in the 'formDefinition' array
      */
-    getPosition(): Array<number> {
+    getBlock(): Array<number> {
         let position = this.block[this.currentRotation];
         if (typeof position === "number") {
             position = this.block[position];

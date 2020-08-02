@@ -13,7 +13,9 @@ async function init(): Promise<void> {
         // Add a handler, which catches 'CTRL+C'
         addExitHandler();
 
-        new Game();
+        const game = new Game();
+        game.activate();
+        game.start();
     } catch (e) {
         console.error(e);
     }

@@ -6,20 +6,25 @@ describe('Game', () => {
     let positionMatrix: Array<number>;
     let matrix: Array<number>;
 
+    let game: Game;
+
     beforeEach(() => {
         // Reset matrix
         positionMatrix = [...emptyMatrix];
         matrix = [...emptyMatrix];
+
+        game = new Game();
     });
 
     describe('moveDown', () => {
         it('should move the current position one row down', () => {
             // Arrange
-            positionMatrix[6] = 0xF0;
-            const matrixBefore = [...positionMatrix];
+            game.setPosition(6, 0xF0);
+            const matrixBefore = game.getCopyOfPositionMatrix();
 
             // Act
-            Game.moveDown(positionMatrix);
+            game.moveDown();
+            positionMatrix = game.getCopyOfPositionMatrix();
 
             // Assert
             positionMatrix.forEach((row, idx) =>
@@ -31,10 +36,10 @@ describe('Game', () => {
     describe('isAbleToMoveDown', () => {
         it('should allow to move down, if we are not in the last row', () => {
             // Arrange
-            positionMatrix[6] = 0xF0;
+            game.setPosition(6, 0xF0);
 
             // Act
-            const isAbleToMoveDown = Game.isAbleToMoveDown(positionMatrix, matrix);
+            const isAbleToMoveDown = game.isAbleToMoveDown();
 
             // Assert
             expect(isAbleToMoveDown).toBe(true);
@@ -42,10 +47,10 @@ describe('Game', () => {
 
         it('should not allow to move down, if we are in the last row', () => {
             // Arrange
-            positionMatrix[7] = 0xF0;
+            game.setPosition(7, 0xF0);
 
             // Act
-            const isAbleToMoveDown = Game.isAbleToMoveDown(positionMatrix, matrix);
+            const isAbleToMoveDown = game.isAbleToMoveDown();
 
             // Assert
             expect(isAbleToMoveDown).toBe(false);
@@ -53,11 +58,11 @@ describe('Game', () => {
 
         it('should not allow to move down, if there is an obstacle below the block', () => {
             // Arrange
-            positionMatrix[6] = 0xF0;
-            matrix[7] = 0xF0;
+            game.setPosition(6, 0xF0);
+            game.setMatrix(7, 0xF0);
 
             // Act
-            const isAbleToMoveDown = Game.isAbleToMoveDown(positionMatrix, matrix);
+            const isAbleToMoveDown = game.isAbleToMoveDown();
 
             // Assert
             expect(isAbleToMoveDown).toBe(false);
@@ -67,25 +72,28 @@ describe('Game', () => {
     describe('moveRight', () => {
         it('should move the current position one column to the right', () => {
             // Arrange
-            positionMatrix[3] = 0x40;   // 01000000
-            positionMatrix[4] = 0x40;   // 01000000
-            positionMatrix[5] = 0x40;   // 01000000
-            positionMatrix[6] = 0x40;   // 01000000
-
-            const secondPositionMatrix = [...emptyMatrix];
-            secondPositionMatrix[6] = 0x78; // 01111000
+            game.setPositionMatrix([0x00, 0x00, 0x00, 0x40, 0x40, 0x40, 0x40, 0x00]);
+            const expected = [0x00, 0x00, 0x00, 0x20, 0x20, 0x20, 0x20, 0x00];
 
             // Act
-            Game.moveRight(positionMatrix, matrix);
-            Game.moveRight(secondPositionMatrix, matrix);
+            game.moveRight();
+            positionMatrix = game.getCopyOfPositionMatrix();
 
             // Assert
-            expect(positionMatrix[3]).toEqual(0x20);        // 00100000
-            expect(positionMatrix[4]).toEqual(0x20);        // 00100000
-            expect(positionMatrix[5]).toEqual(0x20);        // 00100000
-            expect(positionMatrix[6]).toEqual(0x20);        // 00100000
+            expect(positionMatrix).toEqual(expected);
+        });
+        it('should move the current position one column to the right (2)', () => {
+            // Arrange
+            console.log(game.getCopyOfPositionMatrix());
+            game.resetMatrices();   // TODO: We should not need this for the test to work, no?
+            game.setPosition(6, 0x78); // 01111000
 
-            expect(secondPositionMatrix[6]).toEqual(0x3C);  // 00111100
+            // Act
+            game.moveRight();
+            positionMatrix = game.getCopyOfPositionMatrix();
+
+            // Assert
+            expect(positionMatrix[6]).toEqual(0x3C);  // 00111100
         });
     });
 
@@ -99,7 +107,6 @@ describe('Game', () => {
             const isAbleToMoveRight = Game.isAbleToMoveRight(positionMatrix, matrix);
 
             // Assert
-            expect(positionMatrix.length).toBe(matrix.length);
             expect(isAbleToMoveRight).toBe(false);
         });
 
@@ -111,7 +118,6 @@ describe('Game', () => {
             const isAbleToMoveRight = Game.isAbleToMoveRight(positionMatrix, matrix);
 
             // Assert
-            expect(positionMatrix.length).toBe(matrix.length);
             expect(isAbleToMoveRight).toBe(false);
         });
 
@@ -123,7 +129,6 @@ describe('Game', () => {
             const isAbleToMoveRight = Game.isAbleToMoveRight(positionMatrix, matrix);
 
             // Assert
-            expect(positionMatrix.length).toBe(matrix.length);
             expect(isAbleToMoveRight).toBe(true);
         });
     });
@@ -268,6 +273,46 @@ describe('Game', () => {
             expect(matrix[5]).toEqual(0x80);    // 10000000
             expect(matrix[6]).toEqual(0x8F);    // 10001111
             expect(matrix[7]).toEqual(0x8A);    // 10001010
+        });
+    });
+
+    describe('getHexValueOfFirstRowAndCol', () => {
+        it('should return -1, if there is no block inside the matrix', () => {
+            // Arrange
+            // Already done in beforeEach
+
+            // Act
+            const result = Game.getHexValueOfFirstRowAndCol(positionMatrix);
+
+            // Assert
+            expect(result).toEqual(-1);
+        });
+        xit('should return a valid number if the block is at the top left corner', () => {
+            // Arrange
+            // O block
+            positionMatrix[0] = 0xC0;
+            positionMatrix[1] = 0xC0;
+            const expected = 0x80;
+
+            // Act
+            const result = Game.getHexValueOfFirstRowAndCol(positionMatrix);
+
+            // Assert
+            expect(result).toEqual(expected);
+        });
+        xit('should return a valid number if the block is somewhere inside the matrix', () => {
+            // Arrange
+            // J block
+            positionMatrix[3] = 0x10;
+            positionMatrix[4] = 0x10;
+            positionMatrix[5] = 0x30;
+            const expected = 0x20;
+
+            // Act
+            const result = Game.getHexValueOfFirstRowAndCol(positionMatrix);
+
+            // Assert
+            expect(result).toEqual(expected);
         });
     });
 });
