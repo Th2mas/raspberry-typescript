@@ -3,9 +3,6 @@ import {TETROMINO_DEFINITION} from './blocks/definitions/tetromino.definition';
 import {resetAll, writeLedNumber} from './mcp23017';
 import {activateControlButtons, deactivateControlButtons, moveLeft$, moveRight$, rotateLeft$, rotateRight$} from './controls';
 
-// TODO: After testing it statically, move the methods back to being part of the object
-//  -> hide the internal structure
-
 // TODO: Move the connection of the LED Matrix to another file (maybe index.ts)
 export class Game {
 
@@ -72,7 +69,7 @@ export class Game {
                     if (this.isAbleToMoveDown()) {
                         this.moveDown();
                     } else {
-                        if (Game.hasReachedTop(this.matrix) || !Game.hasPlaceToPut(this.positionMatrix, this.matrix)) {
+                        if (this.hasReachedTop() || !this.hasPlaceToPut()) {
                             console.info(`Game over! Collected points: ${this.points}`);
                             console.info('To close the game, press Ctrl+C');
                             this.subscriptions.forEach(subscription => subscription.unsubscribe());
@@ -80,7 +77,7 @@ export class Game {
                             return;
                         }
 
-                        Game.saveCurrentPosition(this.positionMatrix, this.matrix);
+                        this.saveCurrentPosition();
                         this.savedBlocks++;
                         this.updateMovementSpeed();
                         this.resetPolyomino();
@@ -132,36 +129,48 @@ export class Game {
         return isNotOnTheLowestRow && isNotOverlappingWithNextRow;
     }
 
+    /**
+     * Moves the current position of the polyomino one column to the right
+     */
     moveRight(): void {
-        Game.move(this.positionMatrix, this.matrix, Game.isAbleToMoveRight, val => val >> 1);
+        Game.move(this.positionMatrix, this.matrix, () => this.isAbleToMoveRight(), val => val >> 1);
     }
 
-    static moveLeft(positionMatrix: Array<number>, matrix: Array<number>): void {
-        Game.move(positionMatrix, matrix, Game.isAbleToMoveLeft, val => val << 1);
+    /**
+     * Moves the current position of the polyomino one column to the left
+     */
+    moveLeft(): void {
+        Game.move(this.positionMatrix, this.matrix, () => this.isAbleToMoveLeft(), val => val << 1);
     }
 
-    static isAbleToMoveRight(positionMatrix: Array<number>, matrix: Array<number>): boolean {
-        return Game.isAbleToMove(positionMatrix, matrix, num => num >> 1, 0x01);
+    /**
+     * Checks, if the current polyomino can move to the right
+     */
+    isAbleToMoveRight(): boolean {
+        return this.isAbleToMove(num => num >> 1, 0x01);
     }
 
-    static isAbleToMoveLeft(positionMatrix: Array<number>, matrix: Array<number>): boolean {
-        return Game.isAbleToMove(positionMatrix, matrix, num => num << 1, 0x80);
+    /**
+     * Checks, if the current polyomino can move to the left
+     */
+    isAbleToMoveLeft(): boolean {
+        return this.isAbleToMove( num => num << 1, 0x80);
     }
 
-    private static isAbleToMove(
-        positionMatrix: Array<number>,
-        matrix: Array<number>,
-        shift: (num: number) => number,
-        maskValue: number
-    ): boolean {
-        const indicesOfNonZeroBlocks = Game.getNonZeroRowIndices(positionMatrix);
+    /**
+     * Checks, if the current polyomino can move in the given direction
+     * @param shift the shift method, defining the moving direction (only left or right shift)
+     * @param maskValue indicates the border of the matrix
+     */
+    private isAbleToMove(shift: (num: number) => number, maskValue: number): boolean {
+        const indicesOfNonZeroBlocks = Game.getNonZeroRowIndices(this.positionMatrix);
 
         let isGoingToOverlapWithMatrix = false;
         let isGoingOutOfBounds = false;
 
         for (const idx of indicesOfNonZeroBlocks) {
-            isGoingToOverlapWithMatrix = isGoingToOverlapWithMatrix || ((shift(positionMatrix[idx]) & matrix[idx]) !== 0);
-            isGoingOutOfBounds = isGoingOutOfBounds || ((positionMatrix[idx] & maskValue) !== 0);
+            isGoingToOverlapWithMatrix = isGoingToOverlapWithMatrix || ((shift(this.positionMatrix[idx]) & this.matrix[idx]) !== 0);
+            isGoingOutOfBounds = isGoingOutOfBounds || ((this.positionMatrix[idx] & maskValue) !== 0);
         }
 
         return !isGoingToOverlapWithMatrix && !isGoingOutOfBounds;
@@ -191,14 +200,17 @@ export class Game {
     /**
      * Saves the current position of the position matrix in the save matrix
      */
-    static saveCurrentPosition(positionMatrix: Array<number>, matrix: Array<number>): void {
-        matrix.splice(0, matrix.length, ...positionMatrix
-            .map((val, idx) => matrix[idx] | val));
+    saveCurrentPosition(): void {
+        this.matrix.splice(0, this.matrix.length, ...this.positionMatrix
+            .map((val, idx) => this.matrix[idx] | val));
     }
 
-    static hasPlaceToPut(positionMatrix: Array<number>, matrix: Array<number>): boolean {
-        return Game.getNonZeroRowIndices(positionMatrix)
-            .reduce((prev, curr) => prev && ((positionMatrix[curr] & matrix[curr]) === 0), true);
+    /**
+     * Checks if the current position of the polyomino is not overlapping with anything in the save matrix
+     */
+    hasPlaceToPut(): boolean {
+        return Game.getNonZeroRowIndices(this.positionMatrix)
+            .reduce((prev, curr) => prev && ((this.positionMatrix[curr] & this.matrix[curr]) === 0), true);
     }
 
     /**
@@ -213,8 +225,8 @@ export class Game {
     /**
      * Checks, if the top was reached and therefore if the game is over
      */
-    static hasReachedTop(matrix: Array<number>): boolean {
-        return matrix.reduce((prev, curr) => prev && (curr !== 0), true);
+    hasReachedTop(): boolean {
+        return this.matrix.reduce((prev, curr) => prev && (curr !== 0), true);
     }
 
     private updateMovementSpeed(): void {
@@ -237,9 +249,9 @@ export class Game {
         console.log('Rotate');
     }
 
-    static getHexValueOfFirstRowAndCol(positionMatrix: Array<number>): number {
+    getHexValueOfFirstRowAndCol(): number {
         // Filter out all zeroes
-        const nonZeroRowIndices = Game.getNonZeroRowIndices(positionMatrix);
+        const nonZeroRowIndices = Game.getNonZeroRowIndices(this.positionMatrix);
 
         // If the matrix is empty, return -1
         if (nonZeroRowIndices.length === 0) {
@@ -272,21 +284,27 @@ export class Game {
         this.positionMatrix = matrix;
     }
 
+    setSaveMatrix(matrix: Array<number>): void {
+        this.matrix = matrix;
+    }
+
     getCopyOfPositionMatrix(): Array<number> {
         return [...this.positionMatrix];
+    }
+
+    getCopyOfSaveMatrix(): Array<number> {
+        return [...this.matrix];
     }
 
     activate(): void {
         activateControlButtons();
         this.subscriptions.push(
             moveLeft$.subscribe(async () => {
-                // Since the LEDs are reversed, we need to call moveRight here
-                this.moveRight();
+                this.moveLeft();
                 await Game.writeLEDS(this.positionMatrix, this.matrix);
             }),
             moveRight$.subscribe(async () => {
-                // Since the LEDs are reversed, we need to call moveRight here
-                Game.moveLeft(this.positionMatrix, this.matrix);
+                this.moveRight();
                 await Game.writeLEDS(this.positionMatrix, this.matrix);
             }),
             rotateLeft$.subscribe(async () => await this.rotateLeft()),
