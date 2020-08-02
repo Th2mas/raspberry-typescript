@@ -9,12 +9,12 @@ export class Game {
     /**
      * The default interval time, telling how quickly a block moves
      */
-    private static DEFAULT_MOVING_TIME = 1000;
+    private static DEFAULT_MOVING_TIME = 1500;
 
     /**
      * The number of saved blocks at which the speed gets incremented
      */
-    private static NUMBER_OF_STEPS = 5;
+    private static NUMBER_OF_STEPS = 10;
 
     /**
      * The 8x8 matrix, which will store the on/off state of the LEDs (default 0)
@@ -56,31 +56,40 @@ export class Game {
         this.points = 0;
 
         this.resetMatrices();
-        this.resetPolyomino();
+        this.resetPosition();
     }
 
     start() {
         (async () => {
             while (true) {
                 try {
-                    await Game.writeLEDS(this.positionMatrix, this.matrix);
+                    await this.writeLEDS();
+
+                    // Check for game over
+                    if (!this.hasPlaceToPut()) {
+                        console.info(`Game over! Collected points: ${this.points}`);
+                        console.info('To close the game, press Ctrl+C');
+                        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+                        deactivateControlButtons();
+                        return;
+                    }
 
                     // Check, if we are already in the lowest row
                     if (this.isAbleToMoveDown()) {
                         this.moveDown();
-                    } else {
-                        if (this.hasReachedTop() || !this.hasPlaceToPut()) {
-                            console.info(`Game over! Collected points: ${this.points}`);
-                            console.info('To close the game, press Ctrl+C');
-                            this.subscriptions.forEach(subscription => subscription.unsubscribe());
-                            deactivateControlButtons();
-                            return;
-                        }
-
+                    }
+                    // Otherwise save the last position
+                    else {
                         this.saveCurrentPosition();
                         this.savedBlocks++;
                         this.updateMovementSpeed();
-                        this.resetPolyomino();
+
+                        if (this.isAnyRowFull()) {
+                            this.eraseFullRows();
+                            this.incrementPoints(2);
+                        }
+
+                        this.resetPosition();
                     }
 
                     this.incrementPoints();
@@ -99,11 +108,29 @@ export class Game {
         this.positionMatrix = [...Game.EMPTY_MATRIX];
     }
 
-    private resetPolyomino(): void {
+    private resetPosition(): void {
         this.polyomino = new Polyomino(this.definition);
+        this.positionMatrix = [...Game.EMPTY_MATRIX];
 
-        // Per default, the position is on the most right
-        this.polyomino.getBlock().forEach((val, idx) => this.positionMatrix[idx] = val);
+        const block = this.polyomino.getBlock();
+
+        // Per default, the position is on the most right -> introduce some random position
+        const totalLengthBlock = Game.getNonZeroRowIndices(block)
+            .map(idx => block[idx])
+            .reduce((prev, curr) => prev | curr, 0x00);    // OR mask the rows for determining the length
+
+        const maxLength = [...Game.toBinary(totalLengthBlock).match(/1/g)].length;
+        console.log(maxLength);
+        const randomCol = Math.floor(Math.random() * (7 - maxLength));
+        block.forEach((val, idx) => this.positionMatrix[idx] = val << randomCol);
+    }
+
+    /**
+     * Increments the points by a given factor
+     * If the factor is not given, we'll assume 1
+     */
+    private incrementPoints(factor = 1): void {
+        this.points += factor * Game.DEFAULT_MOVING_TIME;
     }
 
     /**
@@ -116,6 +143,7 @@ export class Game {
 
     /**
      * Checks, if the current polyomino is able to move one row down
+     * TODO: Check this method again -> somehow when rotating, it sometimes allows the block to go one row down although there is no space
      */
     isAbleToMoveDown(): boolean {
         const indexOfLowestBlocksRow = Game.getIndexOfLowestBlocksRow(this.positionMatrix);
@@ -175,7 +203,14 @@ export class Game {
 
         return !isGoingToOverlapWithMatrix && !isGoingOutOfBounds;
     }
-
+    /**
+     * Moves the current position of the polyomino one column to the left or right, depending on the shift
+     * @param positionMatrix the matrix containing the current position of the polyomino
+     * @param matrix the save matrix which we use for checking
+     * @param check a method for checking, if we are able to move
+     * @param shift Determines the move direction of the polyomino
+     * TODO: Instead of having the shift method, pass an enum
+     */
     private static move(
         positionMatrix: Array<number>,
         matrix: Array<number>,
@@ -188,12 +223,15 @@ export class Game {
         }
     }
 
-    private static async writeLEDS(positionMatrix: Array<number>, matrix: Array<number>): Promise<void> {
+    /**
+     * Writes all LEDs currently available inside the save matrix and position matrix
+     */
+    private async writeLEDS(): Promise<void> {
         await resetAll();
 
-        for (let row = 0; row < matrix.length; row++) {
+        for (let row = 0; row < this.matrix.length; row++) {
             // TODO: Instead of calling this directly, let the LED matrix know of a state change with an observable
-            await writeLedNumber(row, matrix[row] | positionMatrix[row]);
+            await writeLedNumber(row, this.matrix[row] | this.positionMatrix[row]);
         }
     }
 
@@ -222,45 +260,79 @@ export class Game {
         return (matrix.length - [...matrix].reverse().findIndex(num => num !== 0)) - 1;
     }
 
-    /**
-     * Checks, if the top was reached and therefore if the game is over
-     */
-    hasReachedTop(): boolean {
-        return this.matrix.reduce((prev, curr) => prev && (curr !== 0), true);
-    }
-
     private updateMovementSpeed(): void {
         // The smaller the value, the faster the movement
         this.movementSpeed *= this.savedBlocks % Game.NUMBER_OF_STEPS === 0 ? 0.5 : 1;
     }
 
     private rotateLeft(): void {
-        Game.rotate(this.polyomino, this.polyomino.rotateCounterClockWise);
+        this.rotate(this.polyomino, () => this.polyomino.rotateCounterClockWise());
     }
 
     private rotateRight(): void {
-        Game.rotate(this.polyomino, this.polyomino.rotateClockWise);
+        this.rotate(this.polyomino, () => this.polyomino.rotateClockWise());
     }
 
-    static rotate(polyomino: Polyomino, rotation: () => void): void {
+    rotate(polyomino: Polyomino, rotation: () => void): void {
+        // Rotate the polyomino
         rotation();
-        const newPosition = polyomino.getBlock();
-        // TODO: Rotation does not work yet
-        console.log('Rotate');
+
+        // Get the row and col at which we start copying
+        const { row, col } = this.getHexValueOfFirstRowAndCol();
+
+        // Reset the matrix for containing only the rotated polyomino
+        this.positionMatrix = [...Game.EMPTY_MATRIX];
+
+        polyomino.getBlock().forEach((val, idx) => this.positionMatrix[idx + row] = val << col);
     }
 
-    getHexValueOfFirstRowAndCol(): number {
+    getHexValueOfFirstRowAndCol(): { row: number, col: number } {
         // Filter out all zeroes
         const nonZeroRowIndices = Game.getNonZeroRowIndices(this.positionMatrix);
 
         // If the matrix is empty, return -1
         if (nonZeroRowIndices.length === 0) {
-            return -1;
+            return { row: -1, col: -1};
         }
 
-        // Get first col, which has a non zero value
+        // Get first col, which has a non zero value -> determines how much we have to shift
+        let col = this.positionMatrix.length;
+        for (const idx of nonZeroRowIndices) {
+            const position = this.positionMatrix[idx];
+            for (let i = 0; i < this.positionMatrix.length; i++) {
+                const firstCol = Game.toBinary(position & (1 << i))
+                    .split('').reverse()
+                    .findIndex(val => val !== '0');
+                col = (col > firstCol && firstCol !== -1) ? firstCol : col;
+            }
+        }
 
-        return 0;
+        return { row: nonZeroRowIndices[0], col };
+    }
+
+    static toBinary(num: number): string {
+        return num.toString(2).padStart(8, '0');
+    }
+
+    isAnyRowFull(): boolean {
+        return Game.getNonZeroRowIndices(this.matrix)
+            .filter(idx => this.matrix[idx] === 0xFF)
+            .length > 0;
+    }
+
+    eraseFullRows(): void {
+        const replacedMatrix = [...this.matrix]
+            .map(val => val === 0xFF ? 0x00 : val);
+
+        const newMatrix = [];
+        Game.getNonZeroRowIndices(replacedMatrix)
+            .forEach(idx => newMatrix.push(replacedMatrix[idx]));
+
+        while (newMatrix.length !== 8) {
+            newMatrix.unshift(0x00);
+        }
+
+        this.matrix = newMatrix;
     }
 
     /**
@@ -301,22 +373,20 @@ export class Game {
         this.subscriptions.push(
             moveLeft$.subscribe(async () => {
                 this.moveLeft();
-                await Game.writeLEDS(this.positionMatrix, this.matrix);
+                await this.writeLEDS();
             }),
             moveRight$.subscribe(async () => {
                 this.moveRight();
-                await Game.writeLEDS(this.positionMatrix, this.matrix);
+                await this.writeLEDS();
             }),
-            rotateLeft$.subscribe(async () => await this.rotateLeft()),
-            rotateRight$.subscribe(async () => await this.rotateRight())
+            rotateLeft$.subscribe(async () => {
+                this.rotateLeft();
+                await this.writeLEDS();
+            }),
+            rotateRight$.subscribe(async () => {
+                this.rotateRight();
+                await this.writeLEDS();
+            })
         );
-    }
-
-    /**
-     * Increments the points by a given factor
-     * If the factor is not given, we'll assume 1
-     */
-    private incrementPoints(factor = 1): void {
-        this.points += factor * Game.DEFAULT_MOVING_TIME;
     }
 }

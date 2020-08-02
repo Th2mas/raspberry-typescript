@@ -193,29 +193,6 @@ describe('Game', () => {
         });
     });
 
-    describe('hasReachedTop', () => {
-        it('should be true, if the position matrix has no space left to place blocks', () => {
-            // Arrange
-            game.setSaveMatrix([0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80]);
-
-            // Act
-            const hasReachedTop = game.hasReachedTop();
-
-            // Assert
-            expect(hasReachedTop).toBe(true);
-        });
-        it('should be false, if the position matrix still has space for putting blocks', () => {
-            // Arrange
-            game.setSaveMatrix([0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80]);
-
-            // Act
-            const hasReachedTop = game.hasReachedTop();
-
-            // Assert
-            expect(hasReachedTop).toBe(false);
-        });
-    });
-
     describe('hasPlaceToPut', () => {
         it('should be true for a block, which still fits in the matrix', () => {
             // Arrange
@@ -268,14 +245,14 @@ describe('Game', () => {
             const result = game.getHexValueOfFirstRowAndCol();
 
             // Assert
-            expect(result).toEqual(-1);
+            expect(result).toEqual({ row: -1, col: -1 });
         });
-        xit('should return a valid number if the block is at the top left corner', () => {
+        it('should return a valid number if the block is at the top left corner', () => {
             // Arrange
             // O block
             game.setPosition(0, 0xC0);
             game.setPosition(1, 0xC0);
-            const expected = 0x80;
+            const expected = { row: 0, col: 6 };
 
             // Act
             const result = game.getHexValueOfFirstRowAndCol();
@@ -283,11 +260,11 @@ describe('Game', () => {
             // Assert
             expect(result).toEqual(expected);
         });
-        xit('should return a valid number if the block is somewhere inside the matrix', () => {
+        it('should return a valid number if the block is somewhere inside the matrix', () => {
             // Arrange
             // J block
             game.setPositionMatrix([0x00, 0x00, 0x00, 0x10, 0x10, 0x30, 0x00, 0x00]);
-            const expected = 0x20;
+            const expected = { row: 3, col: 4 };
 
             // Act
             const result = game.getHexValueOfFirstRowAndCol();
