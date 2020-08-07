@@ -66,7 +66,7 @@ export class Game {
                     await this.writeLEDS();
 
                     // Check for game over
-                    if (!this.hasPlaceToPut()) {
+                    if (this.isOverlapping()) {
                         console.info(`Game over! Collected points: ${this.points}`);
                         console.info('To close the game, press Ctrl+C');
                         this.subscriptions.forEach(subscription => subscription.unsubscribe());
@@ -120,7 +120,6 @@ export class Game {
             .reduce((prev, curr) => prev | curr, 0x00);    // OR mask the rows for determining the length
 
         const maxLength = [...Game.toBinary(totalLengthBlock).match(/1/g)].length;
-        console.log(maxLength);
         const randomCol = Math.floor(Math.random() * (7 - maxLength));
         block.forEach((val, idx) => this.positionMatrix[idx] = val << randomCol);
     }
@@ -143,13 +142,12 @@ export class Game {
 
     /**
      * Checks, if the current polyomino is able to move one row down
-     * TODO: Check this method again -> somehow when rotating, it sometimes allows the block to go one row down although there is no space
      */
     isAbleToMoveDown(): boolean {
         const indexOfLowestBlocksRow = Game.getIndexOfLowestBlocksRow(this.positionMatrix);
 
         // Checks, if there is still a row available to move down
-        const isNotOnTheLowestRow = indexOfLowestBlocksRow !== (this.matrix.length - 1);
+        const isNotOnTheLowestRow = indexOfLowestBlocksRow < (this.matrix.length - 1);
 
         // Check, if the current polyomino position is not overlapping with the next row of the tetris matrix
         const isNotOverlappingWithNextRow = (this.positionMatrix[indexOfLowestBlocksRow] & this.matrix[indexOfLowestBlocksRow + 1]) === 0;
@@ -244,14 +242,6 @@ export class Game {
     }
 
     /**
-     * Checks if the current position of the polyomino is not overlapping with anything in the save matrix
-     */
-    hasPlaceToPut(): boolean {
-        return Game.getNonZeroRowIndices(this.positionMatrix)
-            .reduce((prev, curr) => prev && ((this.positionMatrix[curr] & this.matrix[curr]) === 0), true);
-    }
-
-    /**
      * Finds the index of the lowest blocks in the current polyomino position
      * It requires, that the position matrix already has a polyomino inside
      * @return the index of the lowest blocks
@@ -265,25 +255,99 @@ export class Game {
         this.movementSpeed *= this.savedBlocks % Game.NUMBER_OF_STEPS === 0 ? 0.5 : 1;
     }
 
-    private rotateLeft(): void {
+    rotateLeft(): void {
         this.rotate(this.polyomino, () => this.polyomino.rotateCounterClockWise());
     }
 
-    private rotateRight(): void {
+    rotateRight(): void {
         this.rotate(this.polyomino, () => this.polyomino.rotateClockWise());
     }
 
-    rotate(polyomino: Polyomino, rotation: () => void): void {
+    private rotate(polyomino: Polyomino, rotation: () => void): void {
+        if (this.isAbleToRotate(polyomino, rotation)) {
+            this.performRotation(polyomino, rotation);
+        }
+    }
+
+    /**
+     * Performs the rotation in advance and checks, if the rotated polyomino is overlapping with the save matrix
+     * @param polyomino the polyomino to be rotated
+     * @param rotation the rotation method
+     */
+    isAbleToRotate(polyomino: Polyomino, rotation: () => void): boolean {
+        // Save previous position matrix
+        const savedState = [...this.positionMatrix];
+
+        // Count number of active LEDs in the position matrix for later check
+        const activeCellsBefore = this.getActiveCells();
+
+        // Perform rotation in advance
+        this.performRotation(polyomino, rotation);
+
+        // Check if the rotation was valid
+        const isOverlapping = this.isOverlapping();
+
+        // check if the number of active LEDs is the same as before
+        const activeCellsAfter = this.getActiveCells();
+
+        const isSameNumberOfCells = activeCellsBefore === activeCellsAfter;
+
+        // Reset the position matrix
+        this.positionMatrix = savedState;
+
+        // Reset the rotation
+        if (rotation === this.polyomino.rotateClockWise) {
+            this.polyomino.rotateCounterClockWise();
+        } else {
+            this.polyomino.rotateClockWise();
+        }
+
+        // Return true, if the rotation was successful
+        return !isOverlapping && isSameNumberOfCells;
+    }
+
+    private getActiveCells(): number {
+        return this.positionMatrix
+            .map(row => Game.toBinary(row))
+            .map(binary => {
+                const arr = binary.match(/1/g);
+                return arr ? arr.length : 0;
+            })
+            .reduce((prev, curr) => prev + curr, 0);
+    }
+
+    /**
+     * Does the actual rotation
+     * @param polyomino
+     * @param rotation
+     */
+    private performRotation(polyomino: Polyomino, rotation: () => void): void {
         // Rotate the polyomino
         rotation();
 
         // Get the row and col at which we start copying
-        const { row, col } = this.getHexValueOfFirstRowAndCol();
+        const {row, col} = this.getHexValueOfFirstRowAndCol();
 
-        // Reset the matrix for containing only the rotated polyomino
-        this.positionMatrix = [...Game.EMPTY_MATRIX];
+        if (row !== -1 && col !== -1) {
+            // Reset the matrix for containing only the rotated polyomino
+            this.positionMatrix = [...Game.EMPTY_MATRIX];
 
-        polyomino.getBlock().forEach((val, idx) => this.positionMatrix[idx + row] = val << col);
+            let isLongerThanBounds = false;
+            polyomino.getBlock().forEach((val, idx) => {
+                this.positionMatrix[idx + row] = val << col;
+                const binary = Game.toBinary(this.positionMatrix[idx + row]);
+                isLongerThanBounds = isLongerThanBounds || (binary.length > this.positionMatrix.length);
+            });
+            // If we are outside of the bounds (only possible on the far most left), just truncate the far right zero
+            if (isLongerThanBounds) {
+                this.positionMatrix.forEach((row, idx) => this.positionMatrix[idx] = row >> 1);
+            }
+
+            // Check if we have too many rows. If yes, then remove the top most one (is always zero in the position matrix, if we are in the lowest rows)
+            if (this.positionMatrix.length > Game.EMPTY_MATRIX.length) {
+                this.positionMatrix.splice(0, 1);
+            }
+        }
     }
 
     getHexValueOfFirstRowAndCol(): { row: number, col: number } {
@@ -292,7 +356,7 @@ export class Game {
 
         // If the matrix is empty, return -1
         if (nonZeroRowIndices.length === 0) {
-            return { row: -1, col: -1};
+            return {row: -1, col: -1};
         }
 
         // Get first col, which has a non zero value -> determines how much we have to shift
@@ -307,7 +371,15 @@ export class Game {
             }
         }
 
-        return { row: nonZeroRowIndices[0], col };
+        return {row: nonZeroRowIndices[0], col};
+    }
+
+    /**
+     * Checks if the current position of the polyomino is overlapping with anything in the save matrix
+     */
+    isOverlapping(): boolean {
+        return Game.getNonZeroRowIndices(this.positionMatrix)
+            .reduce((prev, curr) => prev || ((this.positionMatrix[curr] & this.matrix[curr]) !== 0), false);
     }
 
     static toBinary(num: number): string {
@@ -344,6 +416,32 @@ export class Game {
             .filter(val => val !== -1);                                 // Filter out redundant indices
     }
 
+    activate(): void {
+        activateControlButtons();
+        this.subscriptions.push(
+            moveLeft$.subscribe(async () => {
+                this.moveLeft();
+                await this.writeLEDS();
+            }),
+            moveRight$.subscribe(async () => {
+                this.moveRight();
+                await this.writeLEDS();
+            }),
+            rotateLeft$.subscribe(async () => {
+                this.rotateLeft();
+                await this.writeLEDS();
+            }),
+            rotateRight$.subscribe(async () => {
+                this.rotateRight();
+                await this.writeLEDS();
+            })
+        );
+    }
+
+    ///////////////////////////////////////////////
+    // The following methods are needed for testing
+    ///////////////////////////////////////////////
+
     setPosition(idx: number, value: number): void {
         this.positionMatrix[idx] = value;
     }
@@ -368,25 +466,7 @@ export class Game {
         return [...this.matrix];
     }
 
-    activate(): void {
-        activateControlButtons();
-        this.subscriptions.push(
-            moveLeft$.subscribe(async () => {
-                this.moveLeft();
-                await this.writeLEDS();
-            }),
-            moveRight$.subscribe(async () => {
-                this.moveRight();
-                await this.writeLEDS();
-            }),
-            rotateLeft$.subscribe(async () => {
-                this.rotateLeft();
-                await this.writeLEDS();
-            }),
-            rotateRight$.subscribe(async () => {
-                this.rotateRight();
-                await this.writeLEDS();
-            })
-        );
+    getPolyomino(): Polyomino {
+        return this.polyomino;
     }
 }

@@ -1,5 +1,6 @@
 import 'jasmine';
 import {Game} from '../src/game';
+import {Polyomino} from '../src/blocks/polyomino';
 
 describe('Game', () => {
     const emptyMatrix = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
@@ -193,27 +194,27 @@ describe('Game', () => {
         });
     });
 
-    describe('hasPlaceToPut', () => {
-        it('should be true for a block, which still fits in the matrix', () => {
+    describe('isOverlapping', () => {
+        it('should be false for a block, which still fits in the matrix', () => {
             // Arrange
             game.setPositionMatrix([0x80, 0x80, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00]);
 
             // Act
-            const hasPlaceToPut = game.hasPlaceToPut();
+            const isOverlapping = game.isOverlapping();
 
             // Assert
-            expect(hasPlaceToPut).toBe(true);
+            expect(isOverlapping).toBe(false);
         });
-        it('should be false for a block, which cannot find in the matrix', () => {
+        it('should be true for a block, which overlaps with a row in the save matrix', () => {
             // Arrange
             game.setPositionMatrix([0x80, 0x80, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00]);
             game.setSaveMatrix([0x00, 0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80]);
 
             // Act
-            const hasPlaceToPut = game.hasPlaceToPut();
+            const isOverlapping = game.isOverlapping();
 
             // Assert
-            expect(hasPlaceToPut).toBe(false);
+            expect(isOverlapping).toBe(true);
         });
     });
 
@@ -264,13 +265,53 @@ describe('Game', () => {
             // Arrange
             // J block
             game.setPositionMatrix([0x00, 0x00, 0x00, 0x10, 0x10, 0x30, 0x00, 0x00]);
-            const expected = { row: 3, col: 4 };
+            const expected = {row: 3, col: 4};
 
             // Act
             const result = game.getHexValueOfFirstRowAndCol();
 
             // Assert
             expect(result).toEqual(expected);
+        });
+    });
+    describe('isAbleToRotate', () => {
+        let polyomino: Polyomino;
+
+        beforeEach(() => {
+            polyomino = game.getPolyomino();
+        });
+
+        it('should return true, if the save matrix is empty', () => {
+            // Arrange
+            // Already done in beforeEach
+
+            // Act
+            const resultRotationLeft = game.isAbleToRotate(polyomino, () => game.rotateLeft());
+
+            // Assert
+            expect(resultRotationLeft).toBe(true);
+        });
+        it('should return true, if the save matrix is not empty and the rotation is valid', () => {
+            // Arrange
+            game.setPosition(0, 0x0F);
+            game.setSaveMatrix([0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF]);
+
+            // Act
+            const resultRotationLeft = game.isAbleToRotate(polyomino, () => game.rotateLeft());
+
+            // Assert
+            expect(resultRotationLeft).toBe(true);
+        });
+        it('should return false, if the rotation is not valid', () => {
+            // Arrange
+            game.setPosition(0, 0x0F);
+            game.setSaveMatrix([0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+
+            // Act
+            const resultRotationLeft = game.isAbleToRotate(polyomino, () => game.rotateLeft());
+
+            // Assert
+            expect(resultRotationLeft).toBe(false);
         });
     });
 });
