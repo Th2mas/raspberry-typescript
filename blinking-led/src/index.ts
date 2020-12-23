@@ -12,14 +12,9 @@ const pinNumber = 18;
 rpio.open(pinNumber, rpio.OUTPUT, rpio.LOW);
 
 /**
- * Defines how often the LED should blink (in ms)
+ * Defines the blinking speed in seconds
  */
-const blinkTime = 200;  // every 200ms
-
-/**
- * Defines when the blinking should stop (in ms)
- */
-const endTime = 10000; // after 10 seconds
+const speedInSeconds = 1;
 
 /**
  * Toggles the state of a pin
@@ -35,16 +30,21 @@ function toggleState(pin: number): void {
 }
 
 /**
- * Ends the toggling for the given pin
- *
- * @param pin the pin, whose state is currently toggled
- * @param interval the interval which should be cleared
+ * A simple 'sleep' method, which stops the program for a number of seconds
+ * @param seconds defines the duration of the stop
  */
-function endToggling(pin: number, interval: NodeJS.Timeout): void {
-    clearInterval(interval);
-    // Turn the pin off
-    rpio.close(pin);
+function sleep(seconds: number): void {
+    const start = Date.now();
+    let end;
+    do {
+        end = Date.now();
+    }
+    while ((end - start) < seconds * 1000);
 }
 
-const blinkInterval = setInterval(() => toggleState(pinNumber), blinkTime);
-setTimeout(() => endToggling(pinNumber, blinkInterval), endTime);
+for (let i = 0; i < 3; i++) {
+    toggleState(pinNumber);
+    sleep(speedInSeconds);
+    toggleState(pinNumber);
+    sleep(speedInSeconds);
+}
