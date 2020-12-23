@@ -11,6 +11,7 @@ rpio.open(BUTTON_OFF, rpio.INPUT, rpio.PULL_UP);
 
 console.log('Start blinking');
 let blinkInterval: NodeJS.Timeout;
+let isBlinking = true;
 blinkInterval = setBlinkInterval();
 
 // Listen to button events
@@ -33,14 +34,20 @@ function toggleState(pin: number): void {
 function resumeBlinking(): void {
     if (isValidPush(BUTTON_ON)) {
         console.log('Resume blinking');
-        blinkInterval = setBlinkInterval();
+        if (!isBlinking) {
+            isBlinking = true;
+            blinkInterval = setBlinkInterval();
+        }
     }
 }
 
 function pauseBlinking(): void {
     if (isValidPush(BUTTON_OFF)) {
         console.log('Pause blinking');
-        clearInterval(blinkInterval);
+        if (isBlinking) {
+            isBlinking = false;
+            clearInterval(blinkInterval);
+        }
     }
 }
 
