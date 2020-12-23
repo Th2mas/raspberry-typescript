@@ -29,22 +29,9 @@ function toggleState(pin: number): void {
     rpio.write(pin, outputState);
 }
 
-/**
- * A simple 'sleep' method, which stops the program for a number of seconds
- * @param seconds defines the duration of the stop
- */
-function sleep(seconds: number): void {
-    const start = Date.now();
-    let end;
-    do {
-        end = Date.now();
-    }
-    while ((end - start) < seconds * 1000);
-}
-
 for (let i = 0; i < 3; i++) {
     toggleState(pinNumber);
-    sleep(speedInSeconds);
+    rpio.sleep(speedInSeconds);
     toggleState(pinNumber);
-    sleep(speedInSeconds);
+    rpio.sleep(speedInSeconds);
 }

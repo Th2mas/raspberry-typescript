@@ -5,20 +5,31 @@ const BUTTON_ON = 22;   // GPIO 25
 const BUTTON_OFF = 32;  // GPIO 12
 const PINS = [LED, BUTTON_ON, BUTTON_OFF];
 
+// Configure the GPIO pins
 rpio.open(LED, rpio.OUTPUT, rpio.LOW);
 rpio.open(BUTTON_ON, rpio.INPUT, rpio.PULL_UP);
 rpio.open(BUTTON_OFF, rpio.INPUT, rpio.PULL_UP);
 
-console.log('Start blinking');
+/**
+ * Defines the blinking speed in seconds
+ */
+const speedInSeconds = 1;
+
+// Define the blinking interval
 let blinkInterval: NodeJS.Timeout;
 let isBlinking = true;
-blinkInterval = setBlinkInterval();
+blinkInterval = setBlinkInterval(speedInSeconds);
 
 // Listen to button events
 rpio.poll(BUTTON_ON, resumeBlinking);
 rpio.poll(BUTTON_OFF, pauseBlinking);
 
 addExitHandler();
+
+// Notify user that the program has started
+console.log('Start blinking');
+
+// METHODS
 
 /**
  * Toggles the state of a pin
@@ -31,28 +42,34 @@ function toggleState(pin: number): void {
     rpio.write(pin, rpio.read(pin) === rpio.HIGH ? rpio.LOW : rpio.HIGH);
 }
 
+/**
+ * Resumes the blinking, if it was stopped
+ */
 function resumeBlinking(): void {
-    if (isValidPush(BUTTON_ON)) {
+    if (isValidPush(BUTTON_ON) && !isBlinking) {
         console.log('Resume blinking');
-        if (!isBlinking) {
-            isBlinking = true;
-            blinkInterval = setBlinkInterval();
-        }
+        isBlinking = true;
+        blinkInterval = setBlinkInterval(speedInSeconds);
     }
 }
 
+/**
+ * Stops the blinking
+ */
 function pauseBlinking(): void {
-    if (isValidPush(BUTTON_OFF)) {
+    if (isValidPush(BUTTON_OFF) && isBlinking) {
         console.log('Pause blinking');
-        if (isBlinking) {
-            isBlinking = false;
-            clearInterval(blinkInterval);
-        }
+        isBlinking = false;
+        clearInterval(blinkInterval);
     }
 }
 
-function setBlinkInterval(): NodeJS.Timeout {
-    return setInterval(() => toggleState(LED), 500);
+/**
+ * Sets the blink interval to a number of seconds
+ * @param seconds the speed of the blinking
+ */
+function setBlinkInterval(seconds: number): NodeJS.Timeout {
+    return setInterval(() => toggleState(LED), seconds * 1000);
 }
 
 /**
@@ -64,6 +81,9 @@ function isValidPush(pin: number): boolean {
     return rpio.read(pin) === rpio.LOW;
 }
 
+/**
+ * Adds a handler for gracefully stopping the program, when 'CTRL+C' was pressed
+ */
 function addExitHandler(): void {
     // Start reading from stdin so we don't exit
     process.stdin.resume();
