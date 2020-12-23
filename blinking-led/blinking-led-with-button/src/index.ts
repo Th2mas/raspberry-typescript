@@ -15,32 +15,20 @@ rpio.open(BUTTON_OFF, rpio.INPUT, rpio.PULL_UP);
  */
 const speedInSeconds = 1;
 
-// Define the blinking interval
-let blinkInterval: NodeJS.Timeout;
-let isBlinking = true;
-blinkInterval = setBlinkInterval(speedInSeconds);
-
 // Listen to button events
 rpio.poll(BUTTON_ON, resumeBlinking);
 rpio.poll(BUTTON_OFF, pauseBlinking);
 
+// Define the blinking interval
+let isBlinking = true;
+let blinkInterval = setBlinkInterval(speedInSeconds);
+
 addExitHandler();
 
-// Notify user that the program has started
+// Notify the user that the program has started
 console.log('Start blinking');
 
 // METHODS
-
-/**
- * Toggles the state of a pin
- * The pin can either be on ("1") or off ("0")
- * If the pin is on (high), then turn it off (low); otherwise the other way around
- *
- * @param pin the GPIO pin whose state should be toggled
- */
-function toggleState(pin: number): void {
-    rpio.write(pin, rpio.read(pin) === rpio.HIGH ? rpio.LOW : rpio.HIGH);
-}
 
 /**
  * Resumes the blinking, if it was stopped
@@ -65,6 +53,15 @@ function pauseBlinking(): void {
 }
 
 /**
+ * Checks for contact bounce
+ * @param pin the physical pin number
+ */
+function isValidPush(pin: number): boolean {
+    rpio.msleep(20);
+    return rpio.read(pin) === rpio.LOW;
+}
+
+/**
  * Sets the blink interval to a number of seconds
  * @param seconds the speed of the blinking
  */
@@ -73,12 +70,14 @@ function setBlinkInterval(seconds: number): NodeJS.Timeout {
 }
 
 /**
- * Checks for contact bounce
- * @param pin the physical pin number
+ * Toggles the state of a pin
+ * The pin can either be on ("1") or off ("0")
+ * If the pin is on (high), then turn it off (low); otherwise the other way around
+ *
+ * @param pin the GPIO pin whose state should be toggled
  */
-function isValidPush(pin: number): boolean {
-    rpio.msleep(20);
-    return rpio.read(pin) === rpio.LOW;
+function toggleState(pin: number): void {
+    rpio.write(pin, rpio.read(pin) === rpio.HIGH ? rpio.LOW : rpio.HIGH);
 }
 
 /**
